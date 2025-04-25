@@ -136,7 +136,8 @@ const menuItems = [
     path: '/inventory',
     badge: null,
     subMenu: [
-      { text: 'Product', path: '/product' },
+      { text: ' Fournisseurs', path: '/provider' },
+      { text: 'Produits', path: '/product' },
       { text: ' Emplacement', path: '/forecasting/predictive' },
       { text: ' Stock', path: '/forecasting/reports' }
     ]
@@ -231,6 +232,7 @@ const VerticalNavbar = ({ children }) => {
   const isNotificationMenuOpen = Boolean(notificationAnchorEl);
 
   return (
+    <div className="vertical-navbar">
     <Box sx={{ display: 'flex' }}>
       <CssBaseline />
       
@@ -453,38 +455,40 @@ const VerticalNavbar = ({ children }) => {
               </ListItem>
               
               {/* Sous-menu */}
-              {open && item.subMenu && expandedItem === index && (
-                <Box sx={{ pl: 4, mb: 1 }}>
-                  {item.subMenu.map((subItem, subIndex) => (
-                    <ListItem 
-                      key={subItem.text}
-                      disablePadding
-                      sx={{ 
-                        borderRadius: 1,
-                        '&:hover': {
-                          bgcolor: alpha(theme.palette.primary.main, 0.05)
-                        }
-                      }}
-                    >
-                      <ListItemButton
-                        sx={{
-                          py: 0.75,
-                          minHeight: 36,
+                {open && item.subMenu && expandedItem === index && (
+                  <Box sx={{ pl: 4, mb: 1 }}>
+                    {item.subMenu.map((subItem, subIndex) => (
+                      <ListItem 
+                        key={subItem.text}
+                        disablePadding
+                        sx={{ 
                           borderRadius: 1,
+                          '&:hover': {
+                            bgcolor: alpha(theme.palette.primary.main, 0.05)
+                          }
                         }}
                       >
-                        <ListItemText 
-                          primary={subItem.text}
-                          primaryTypographyProps={{
-                            fontSize: '0.875rem',
-                            fontWeight: 400
+                        <ListItemButton
+                          component={Link} // Ajout du composant Link pour la navigation
+                          to={subItem.path}  // Lien vers le chemin du sous-menu
+                          sx={{
+                            py: 0.75,
+                            minHeight: 36,
+                            borderRadius: 1,
                           }}
-                        />
-                      </ListItemButton>
-                    </ListItem>
-                  ))}
-                </Box>
-              )}
+                        >
+                          <ListItemText 
+                            primary={subItem.text}
+                            primaryTypographyProps={{
+                              fontSize: '0.875rem',
+                              fontWeight: 400
+                            }}
+                          />
+                        </ListItemButton>
+                      </ListItem>
+                    ))}
+                  </Box>
+                )}
             </Box>
           ))}
         </List>
@@ -509,6 +513,7 @@ const VerticalNavbar = ({ children }) => {
         {children}
       </Box>
     </Box>
+    </div>
   );
 };
 

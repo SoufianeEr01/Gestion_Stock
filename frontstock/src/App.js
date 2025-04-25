@@ -1,22 +1,24 @@
+// App.js
 import './App.css';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import VerticalNavbar from './Composants/NavBarVertical';
 
-import PagePrincipal from './Gestion_Stock/Page/Product/PagePrincipal';
+// Importez vos composants de page
+ import PagePrincipal from './Gestion_Stock/Page/Product/PagePrincipal';
+import ShowProviders from './Gestion_Stock/Page/Provider/ShowProviders';
+import StockDashboard from './Gestion_Stock/StockDashboard';
 
 function App() {
   return (
     <Router>
-      <div className="app-container">
-        <VerticalNavbar />
-
-        <div className="content-container">
-          <Routes>
-            <Route path="/Product" element={<PagePrincipal />} />
-            {/* Add more routes as needed */}
-          </Routes>
-        </div>
-      </div>
+      <VerticalNavbar>
+        <Routes>
+          {/* Routes principales */}
+          <Route path="/" element={<StockDashboard />} />
+          <Route path="/product" element={<PagePrincipal />} />
+          <Route path="/provider" element={<ShowProviders />} />
+        </Routes>
+      </VerticalNavbar>
     </Router>
   );
 }
