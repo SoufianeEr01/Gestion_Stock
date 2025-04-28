@@ -31,7 +31,11 @@ public class ProduitService {
         return produitRepository.findById(id).map(p -> {
             p.setNom(updatedProduit.getNom());
             p.setDescription(updatedProduit.getDescription());
+            p.setCategorie(updatedProduit.getCategorie());
+            p.setImage(updatedProduit.getImage());
             p.setCode_bare(updatedProduit.getCode_bare());
+            p.setPrix_unitaire(updatedProduit.getPrix_unitaire());
+            p.setQuantite_commande(updatedProduit.getQuantite_commande());
             return produitRepository.save(p);
         }).orElse(null);
     }

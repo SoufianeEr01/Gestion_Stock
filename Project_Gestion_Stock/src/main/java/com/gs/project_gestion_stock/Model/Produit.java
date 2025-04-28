@@ -19,8 +19,20 @@ public class Produit {
     @Column(nullable = false)
     private String description;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private TypeCategorie categorie;
+
+
+    private String image;
+
     @Column(nullable = false)
     private String code_bare;
 
+    @Column(nullable = false)
+    private int prix_unitaire;
+
+    @Column(nullable = false)
+    private int quantite_commande;
 
 }

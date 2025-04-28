@@ -16,14 +16,14 @@ public class Stock {
     private int id;
 
     @Column(nullable = false)
-    private int quantite_disponible;
+    private int quantite_importe;
     @Column(nullable = false)
     private int quantite_reserver;
     @Column(nullable = false)
     private int seuil_reapprovisionnement;
     @Column(nullable = false)
-    private LocalDate date_peremption;
-    @ManyToOne
+    private LocalDate date_expiration;
+    @OneToOne
     private Produit produit;
 
     @ManyToOne

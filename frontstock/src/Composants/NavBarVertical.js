@@ -19,8 +19,11 @@ import {
   Menu,
   MenuItem,
   ListItemButton,
-  useMediaQuery
+  useMediaQuery,
+
 } from '@mui/material';
+import LocationOnIcon from '@mui/icons-material/LocationOn';
+import StoreIcon from '@mui/icons-material/Store';
 import { styled, alpha } from '@mui/material/styles';
 import {
   Dashboard as DashboardIcon,
@@ -131,18 +134,25 @@ const menuItems = [
     badge: null 
   },
   { 
+    text: 'Fournisseurs', 
+    icon: <SuppliersIcon />, 
+    path: '/provider',
+    badge: null 
+  },
+  { 
     text: 'Inventaire', 
     icon: <InventoryIcon />, 
     path: '/inventory',
     badge: null,
     subMenu: [
-      { text: ' Fournisseurs', path: '/provider' },
-      { text: 'Produits', path: '/product' },
-      { text: ' Emplacement', path: '/forecasting/predictive' },
-      { text: ' Stock', path: '/forecasting/reports' }
+      // { text: ' Fournisseurs', path: '/provider' },
+      { text: 'Produits', path: '/product', icon: <InventoryIcon /> },
+      { text: 'Emplacement', path: '/location', icon: <LocationOnIcon /> },
+      { text: 'Stock', path: '/forecasting/reports', icon: <StoreIcon /> }
     ]
    
   },
+
   { 
     text: 'Commandes', 
     icon: <ShoppingCartIcon />, 
@@ -160,12 +170,7 @@ const menuItems = [
       { text: 'Rapports automatisés', path: '/forecasting/reports' }
     ]
   },
-  { 
-    text: 'Fournisseurs', 
-    icon: <SuppliersIcon />, 
-    path: '/suppliers',
-    badge: null 
-  },
+ 
   { 
     text: 'Rapports', 
     icon: <ReportsIcon />, 
