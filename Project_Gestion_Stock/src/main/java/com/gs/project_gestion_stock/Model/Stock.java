@@ -30,6 +30,6 @@ public class Stock {
     @OneToOne
     private Produit produit;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.EAGER)
     private Emplacement emplacement;
 }

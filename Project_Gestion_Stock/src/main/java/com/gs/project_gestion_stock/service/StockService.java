@@ -1,6 +1,7 @@
 package com.gs.project_gestion_stock.service;
 
 import com.gs.project_gestion_stock.Dto.StockDTO;
+import com.gs.project_gestion_stock.Mapper.StockMapper;
 import com.gs.project_gestion_stock.Model.Produit;
 import com.gs.project_gestion_stock.Model.Stock;
 import com.gs.project_gestion_stock.Repository.StockRepository;
@@ -12,23 +13,30 @@ import java.util.stream.Collectors;
 
 @Service
 public class StockService {
-    public final StockRepository stockRepository;
+    private final StockRepository stockRepository;
 
     public StockService(StockRepository stockRepository){
-        this.stockRepository=stockRepository;
-    }
-    public List<Stock> getAllStock() {
-        return stockRepository.findAll();  // On retourne directement la liste des stocks
-    }
-    public Optional<Stock> getStockByID(int id){
-        return stockRepository.findById(id);
+        this.stockRepository = stockRepository;
     }
 
+    // ✅ Retourne la liste des StockDTO
+    public List<StockDTO> getAllStock() {
+        return stockRepository.findAll()
+                .stream()
+                .map(StockMapper::toDTO)
+                .collect(Collectors.toList());
+    }
 
+    // ✅ Retourne un seul StockDTO
+    public Optional<StockDTO> getStockByID(int id){
+        return stockRepository.findById(id)
+                .map(StockMapper::toDTO);
+    }
+
+    // Garder createStock et updateStock en mode entité
     public Stock createStock(Stock stock){
         return stockRepository.save(stock);
     }
-
 
     public Stock updateStock(int id, Stock newStock) {
         return stockRepository.findById(id).map(stock -> {
@@ -48,6 +56,4 @@ public class StockService {
         }
         stockRepository.deleteById(id);
     }
-
-
 }
