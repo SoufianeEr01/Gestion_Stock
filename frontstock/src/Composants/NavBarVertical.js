@@ -148,7 +148,7 @@ const menuItems = [
       // { text: ' Fournisseurs', path: '/provider' },
       { text: 'Produits', path: '/product', icon: <InventoryIcon /> },
       { text: 'Emplacement', path: '/location', icon: <LocationOnIcon /> },
-      { text: 'Stock', path: '/forecasting/reports', icon: <StoreIcon /> }
+      { text: 'Stock', path: '/stock', icon: <StoreIcon /> }
     ]
    
   },

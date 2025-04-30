@@ -1,5 +1,7 @@
 package com.gs.project_gestion_stock.Model;
 
+import com.fasterxml.jackson.annotation.JsonIdentityInfo;
+import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -10,6 +12,7 @@ import java.time.LocalDate;
 @Getter
 @Setter
 @Table(name="Stocks")
+@JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id")
 public class Stock {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -23,10 +26,10 @@ public class Stock {
     private int seuil_reapprovisionnement;
     @Column(nullable = false)
     private LocalDate date_expiration;
+
     @OneToOne
     private Produit produit;
 
     @ManyToOne
     private Emplacement emplacement;
-
 }
