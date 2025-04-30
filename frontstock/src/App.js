@@ -8,6 +8,7 @@ import VerticalNavbar from './Composants/NavBarVertical';
 import ShowProviders from './Gestion_Stock/Page/Provider/ShowProviders';
 import StockDashboard from './Gestion_Stock/StockDashboard';
 import PagePrincipaleLocation from './Gestion_Stock/Page/location/PagePrincipaleLocation';
+import PagePrincipalStock from './Gestion_Stock/Page/Stock/PagePrincipalStock';
 function App() {
   return (
     <Router>
@@ -17,6 +18,8 @@ function App() {
           <Route path="/" element={<StockDashboard />} />
           <Route path="/product" element={<PagePrincipal />} />
           <Route path="/location" element={<PagePrincipaleLocation />} />
+          <Route path="/stock" element={<PagePrincipalStock />} /> 
+          {/* Remplacez par le composant de gestion des stocks */}
           <Route path="/provider" element={<ShowProviders />} />
         </Routes>
       </VerticalNavbar>

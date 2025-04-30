@@ -1,17 +1,19 @@
 package com.gs.project_gestion_stock.Model;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
+import com.fasterxml.jackson.annotation.JsonIdentityInfo;
+import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Min;
 import lombok.Getter;
 import lombok.Setter;
 
 import java.time.LocalDate;
+
 @Entity
 @Getter
 @Setter
 @Table(name = "MouvementStocks")
+@JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id")
 public class MouvementStock {
 
         @Id
@@ -20,7 +22,6 @@ public class MouvementStock {
 
         @Column(nullable = false)
         private String utilisateur_id;
-
 
         @Column(nullable = false)
         private LocalDate date_mouvement;

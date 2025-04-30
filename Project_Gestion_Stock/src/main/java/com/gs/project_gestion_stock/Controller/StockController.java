@@ -4,6 +4,8 @@ import com.gs.project_gestion_stock.Dto.StockDTO;
 import com.gs.project_gestion_stock.Model.Stock;
 import com.gs.project_gestion_stock.service.StockService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -24,13 +26,12 @@ public class StockController {
     }
 
     // 🔹 Ajouter un nouveau stock
-    @PostMapping
-    public ResponseEntity<Stock> createStock( @RequestBody Stock stock) {
+    @PostMapping("")
+    public ResponseEntity<Stock> createStock(@RequestBody Stock stock) {
         Stock createdStock = stockService.createStock(stock);
-        return ResponseEntity.ok(createdStock);
+        return new ResponseEntity<>(createdStock, HttpStatus.CREATED);
     }
 
-    // 🔹 Récupérer tous les stocks
 
 
     // 🔹 Récupérer un stock par ID
@@ -63,9 +64,10 @@ public class StockController {
         }
     }
 
-    @GetMapping
-    public ResponseEntity<List<StockDTO>> getAllStockLight() {
-        return ResponseEntity.ok(stockService.getAllStockDTO());
+
+    @GetMapping("")
+    public List<Stock> getAllStocks() {
+        return stockService.getAllStock();
     }
 
 }

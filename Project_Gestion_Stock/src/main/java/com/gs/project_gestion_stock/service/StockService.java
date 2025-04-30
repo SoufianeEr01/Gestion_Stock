@@ -17,17 +17,8 @@ public class StockService {
     public StockService(StockRepository stockRepository){
         this.stockRepository=stockRepository;
     }
-    public List<StockDTO> getAllStockDTO() {
-        return stockRepository.findAll().stream().map(stock -> {
-            StockDTO dto = new StockDTO();
-            dto.setId(stock.getId());
-            dto.setQuantiteImporte(stock.getQuantite_importe());
-            dto.setQuantiteReserver(stock.getQuantite_reserver());
-            dto.setSeuilReapprovisionnement(stock.getSeuil_reapprovisionnement());
-            dto.setProduitNom(stock.getProduit() != null ? stock.getProduit().getNom() : null);
-            dto.setEmplacementNom(stock.getEmplacement() != null ? stock.getEmplacement().getNom() : null);
-            return dto;
-        }).collect(Collectors.toList());
+    public List<Stock> getAllStock() {
+        return stockRepository.findAll();  // On retourne directement la liste des stocks
     }
     public Optional<Stock> getStockByID(int id){
         return stockRepository.findById(id);
