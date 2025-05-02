@@ -11,25 +11,29 @@ import java.time.LocalDate;
 @Entity
 @Getter
 @Setter
-@Table(name="Stocks")
+@Table(name = "Stocks")
 @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id")
 public class Stock {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
 
     @Column(nullable = false)
     private int quantite_importe;
+
     @Column(nullable = false)
     private int quantite_reserver;
+
     @Column(nullable = false)
     private int seuil_reapprovisionnement;
+
     @Column(nullable = false)
     private LocalDate date_expiration;
 
-    @OneToOne
+    @OneToOne(optional = false)
     private Produit produit;
 
-    @ManyToOne
+    @ManyToOne(optional = false)
     private Emplacement emplacement;
 }
