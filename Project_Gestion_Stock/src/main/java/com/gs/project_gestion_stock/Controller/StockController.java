@@ -5,10 +5,8 @@ import com.gs.project_gestion_stock.Model.Stock;
 import com.gs.project_gestion_stock.service.StockService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
 
 import java.util.List;
 import java.util.Optional;
@@ -25,24 +23,19 @@ public class StockController {
         this.stockService = stockService;
     }
 
-    // 🔹 Ajouter un nouveau stock
     @PostMapping("")
     public ResponseEntity<Stock> createStock(@RequestBody Stock stock) {
         Stock createdStock = stockService.createStock(stock);
         return new ResponseEntity<>(createdStock, HttpStatus.CREATED);
     }
 
-
-
-    // 🔹 Récupérer un stock par ID
     @GetMapping("/{id}")
-    public ResponseEntity<Stock> getStockById(@PathVariable int id) {
-        Optional<Stock> stock = stockService.getStockByID(id);
-        return stock.map(ResponseEntity::ok)
+    public ResponseEntity<StockDTO> getStockById(@PathVariable int id) {
+        Optional<StockDTO> stockDTO = stockService.getStockByID(id);
+        return stockDTO.map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
 
-    // 🔹 Mettre à jour un stock existant
     @PutMapping("/{id}")
     public ResponseEntity<Stock> updateStock(@PathVariable int id, @RequestBody Stock stock) {
         try {
@@ -53,7 +46,6 @@ public class StockController {
         }
     }
 
-    // 🔹 Supprimer un stock
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteStock(@PathVariable int id) {
         if (stockService.getStockByID(id).isPresent()) {
@@ -64,10 +56,9 @@ public class StockController {
         }
     }
 
-
     @GetMapping("")
-    public List<Stock> getAllStocks() {
-        return stockService.getAllStock();
+    public ResponseEntity<List<StockDTO>> getAllStocks() {
+        List<StockDTO> stocks = stockService.getAllStock();
+        return ResponseEntity.ok(stocks);
     }
-
 }
