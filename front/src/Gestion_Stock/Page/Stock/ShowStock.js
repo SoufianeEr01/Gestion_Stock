@@ -72,8 +72,8 @@ const ShowStock = ({ stocks, onEdit, onDelete }) => {
         <Table>
           <TableHead>
             <TableRow>
-              <TableCell>Produit</TableCell>
               <TableCell>Emplacement</TableCell>
+              <TableCell>Produit</TableCell>
               <TableCell>Quantité Importée</TableCell>
               <TableCell>Quantité Réservée</TableCell>
               <TableCell>Seuil Réapprovisionnement</TableCell>
@@ -84,8 +84,8 @@ const ShowStock = ({ stocks, onEdit, onDelete }) => {
           <TableBody>
             {currentStocks.map((stock) => (
               <TableRow key={stock.id}>
+              <TableCell sx={{ fontWeight: 'bold' }}>{stock.emplacement?.nom}</TableCell>
                 <TableCell>{stock.produit?.nom}</TableCell>
-                <TableCell>{stock.emplacement?.nom}</TableCell>
                 <TableCell>{stock.quantite_importe}</TableCell>
                 <TableCell>{stock.quantite_reserver}</TableCell>
                 <TableCell>{stock.seuil_reapprovisionnement}</TableCell>

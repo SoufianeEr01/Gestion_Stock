@@ -148,7 +148,9 @@ const menuItems = [
       // { text: ' Fournisseurs', path: '/provider' },
       { text: 'Produits', path: '/product', icon: <InventoryIcon /> },
       { text: 'Emplacement', path: '/location', icon: <LocationOnIcon /> },
-      { text: 'Stock', path: '/stock', icon: <StoreIcon /> }
+      { text: 'Stock', path: '/stock', icon: <StoreIcon /> },
+      { text: 'Mouvement Stock', path: '/movement'}
+
     ]
    
   },
@@ -177,8 +179,8 @@ const menuItems = [
     path: '/reports',
     badge: null,
     subMenu: [
-      { text: 'Finances', path: '/reports/finances' },
-      { text: 'Performance', path: '/reports/performance' },
+      { text: 'Mouvement Stock', path: '/Reporting' },
+      { text: 'Stock', path: '/ReportingStock' },
       { text: 'Historique', path: '/reports/history' }
     ]
   },

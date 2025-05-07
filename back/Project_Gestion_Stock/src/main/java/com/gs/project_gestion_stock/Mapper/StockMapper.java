@@ -34,7 +34,7 @@ public class StockMapper {
             emplacementDTO.setId(e.getId());
             emplacementDTO.setNom(e.getNom());
             emplacementDTO.setAdresse(e.getAdresse());
-            emplacementDTO.setType(e.getType().toString());
+            emplacementDTO.setType(e.getType());
             dto.setEmplacement(emplacementDTO);
         }
 

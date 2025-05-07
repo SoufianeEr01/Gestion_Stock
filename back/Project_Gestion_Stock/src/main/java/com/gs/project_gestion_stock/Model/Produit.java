@@ -6,34 +6,36 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.time.LocalDate;
-
 @Entity
 @Getter
 @Setter
-@Table(name = "Stocks")
+@Table(name="Produits")
 @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id")
-public class Stock {
-
+public class Produit {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
 
     @Column(nullable = false)
-    private int quantite_importe;
+    private String nom;
 
     @Column(nullable = false)
-    private int quantite_reserver;
+    private String description;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private TypeCategorie categorie;
+
+
+    private String image;
 
     @Column(nullable = false)
-    private int seuil_reapprovisionnement;
+    private String code_bare;
 
     @Column(nullable = false)
-    private LocalDate date_expiration;
+    private int prix_unitaire;
 
-    @OneToOne(optional = false)
-    private Produit produit;
+    @Column(nullable = false)
+    private int quantite_commande;
 
-    @ManyToOne(optional = false)
-    private Emplacement emplacement;
 }
