@@ -1,6 +1,5 @@
 package com.gs.project_gestion_stock.service;
 
-
 import com.gs.project_gestion_stock.Dto.EmplacementDTO;
 import com.gs.project_gestion_stock.Model.Emplacement;
 import com.gs.project_gestion_stock.Repository.EmplacementRepository;

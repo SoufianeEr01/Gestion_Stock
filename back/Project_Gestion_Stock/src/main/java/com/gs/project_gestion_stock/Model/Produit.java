@@ -22,6 +22,9 @@ public class Produit {
     @Column(nullable = false)
     private String description;
 
+    @Column(nullable = false)
+    private int id_fournisseur;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private TypeCategorie categorie;
