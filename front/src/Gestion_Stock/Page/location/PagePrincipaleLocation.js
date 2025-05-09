@@ -103,7 +103,7 @@ const PagePrincipalLocation = () => {
             <Typography color="text.secondary" textAlign="center" sx={{ py: 5 }}>Aucun emplacement trouvé</Typography>
           ) : (
             <ShowLocation
-              locations={currentLocations}
+              locations={locations}
               onEdit={handleEditLocation}
               onDelete={handleDeleteLocation}
               fetchLocations={fetchLocations}

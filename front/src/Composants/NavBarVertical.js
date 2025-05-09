@@ -20,10 +20,14 @@ import {
   MenuItem,
   ListItemButton,
   useMediaQuery,
-
 } from '@mui/material';
 import LocationOnIcon from '@mui/icons-material/LocationOn';
 import StoreIcon from '@mui/icons-material/Store';
+import TimelineIcon from '@mui/icons-material/Timeline';
+import AddShoppingCartSharpIcon from '@mui/icons-material/AddShoppingCartSharp';
+import CompareArrowsSharpIcon from '@mui/icons-material/CompareArrowsSharp';
+import InventorySharpIcon from '@mui/icons-material/InventorySharp';
+import BarChartIcon from '@mui/icons-material/BarChart';
 import { styled, alpha } from '@mui/material/styles';
 import {
   Dashboard as DashboardIcon,
@@ -34,14 +38,12 @@ import {
   Assessment as ReportsIcon,
   Settings as SettingsIcon,
   Menu as MenuIcon,
-  ChevronLeft as ChevronLeftIcon,
   Notifications as NotificationsIcon,
-  Search as SearchIcon,
   Person as PersonIcon,
   Logout as LogoutIcon,
   AccountCircle as AccountCircleIcon,
   Help as HelpIcon,
-  KeyboardArrowDown as KeyboardArrowDownIcon
+  KeyboardArrowDown as KeyboardArrowDownIcon,
 } from '@mui/icons-material';
 import { Link } from 'react-router-dom';
 
@@ -124,7 +126,6 @@ const DrawerStyled = styled(Drawer, { shouldForwardProp: (prop) => prop !== 'ope
   }),
 );
 
-
 // Liste des éléments de navigation avec sous-menus
 const menuItems = [
   { 
@@ -145,14 +146,12 @@ const menuItems = [
     path: '/inventory',
     badge: null,
     subMenu: [
-      // { text: ' Fournisseurs', path: '/provider' },
-      { text: 'Produits', path: '/product', icon: <InventoryIcon /> },
+      { text: 'Produits', path: '/product', icon: <AddShoppingCartSharpIcon /> },
       { text: 'Emplacement', path: '/location', icon: <LocationOnIcon /> },
-      { text: 'Stock', path: '/stock', icon: <StoreIcon /> }
-    ]
-   
+      { text: 'Stock', path: '/stock', icon: <StoreIcon /> },
+      { text: 'Mouvement Stock', path: '/movement', icon: <CompareArrowsSharpIcon /> },
+    ],
   },
-
   { 
     text: 'Commandes', 
     icon: <ShoppingCartIcon />, 
@@ -167,27 +166,25 @@ const menuItems = [
     subMenu: [
       { text: 'Tendances', path: '/forecasting/trends' },
       { text: 'Analyse prédictive', path: '/forecasting/predictive' },
-      { text: 'Rapports automatisés', path: '/forecasting/reports' }
-    ]
+      { text: 'Rapports automatisés', path: '/forecasting/reports' },
+    ],
   },
- 
   { 
     text: 'Rapports', 
     icon: <ReportsIcon />, 
     path: '/reports',
     badge: null,
     subMenu: [
-      { text: 'Finances', path: '/reports/finances' },
-      { text: 'Performance', path: '/reports/performance' },
-      { text: 'Historique', path: '/reports/history' }
-    ]
+      { text: 'Mouvement Stock', path: '/Reporting', icon: <InventorySharpIcon /> },
+      { text: 'Stock', path: '/ReportingStock', icon: <BarChartIcon /> },
+    ],
   },
   { 
     text: 'Paramètres', 
     icon: <SettingsIcon />, 
     path: '/settings',
     badge: null 
-  }
+  },
 ];
 
 const VerticalNavbar = ({ children }) => {
@@ -198,7 +195,8 @@ const VerticalNavbar = ({ children }) => {
   const [expandedItem, setExpandedItem] = useState(null);
   const [anchorEl, setAnchorEl] = useState(null);
   const [notificationAnchorEl, setNotificationAnchorEl] = useState(null);
-  
+  const [headerTitle, setHeaderTitle] = useState("Inventory AI System");
+
   // Gérer les changements de taille d'écran
   useEffect(() => {
     setOpen(!isMobile);
@@ -208,8 +206,9 @@ const VerticalNavbar = ({ children }) => {
     setOpen(!open);
   };
 
-  const handleListItemClick = (event, index, hasSubmenu) => {
+  const handleListItemClick = (event, index, hasSubmenu, text) => {
     setSelectedIndex(index);
+    setHeaderTitle(text); // Met à jour le titre avec le texte du bouton
     if (hasSubmenu) {
       setExpandedItem(expandedItem === index ? null : index);
     } else {
@@ -232,261 +231,237 @@ const VerticalNavbar = ({ children }) => {
   const handleNotificationMenuClose = () => {
     setNotificationAnchorEl(null);
   };
-  
+
   const isProfileMenuOpen = Boolean(anchorEl);
   const isNotificationMenuOpen = Boolean(notificationAnchorEl);
 
   return (
     <div className="vertical-navbar">
-    <Box sx={{ display: 'flex' }}>
-      <CssBaseline />
-      
-      {/* AppBar (barre du haut) */}
-      <AppBarStyled position="fixed" open={open}>
-        <Toolbar>
-          <IconButton
-            color="inherit"
-            aria-label="ouvrir menu"
-            onClick={handleDrawerToggle}
-            edge="start"
-            sx={{ mr: 2 }}
-          >
-            <MenuIcon />
-          </IconButton>
-          
-          <Typography 
-            variant="h6" 
-            noWrap 
-            component="div" 
-            sx={{ 
-              display: { xs: 'none', sm: 'block' }, 
-              fontWeight: 600, 
-              letterSpacing: '0.5px' 
-            }}
-          >
-            Inventory AI System
-          </Typography>
-          
-         
-          
-          <Box sx={{ flexGrow: 1 }} />
-          
-          {/* Icônes de la barre du haut */}
-          <Box sx={{ display: 'flex', alignItems: 'center' }}>
-            <Tooltip title="Aide">
-              <IconButton color="inherit">
-                <HelpIcon />
-              </IconButton>
-            </Tooltip>
-            
-            <Tooltip title="Notifications">
-              <IconButton 
-                color="inherit"
-                onClick={handleNotificationMenuOpen}
-              >
-                <Badge badgeContent={4} color="error">
-                  <NotificationsIcon />
-                </Badge>
-              </IconButton>
-            </Tooltip>
-            
-            <Tooltip title="Mon profil">
-              <IconButton 
-                edge="end" 
-                color="inherit" 
-                onClick={handleProfileMenuOpen}
-                sx={{ ml: 1 }}
-              >
-                <Avatar 
-                  sx={{ 
-                    width: 32, 
-                    height: 32, 
-                    bgcolor: theme.palette.secondary.main,
-                    border: '2px solid white'
-                  }}
+      <Box sx={{ display: 'flex' }}>
+        <CssBaseline />
+        {/* AppBar (barre du haut) */}
+        <AppBarStyled position="fixed" open={open}>
+          <Toolbar>
+            <IconButton
+              color="inherit"
+              aria-label="ouvrir menu"
+              onClick={handleDrawerToggle}
+              edge="start"
+              sx={{ mr: 2 }}
+            >
+              <MenuIcon />
+            </IconButton>
+            <Typography 
+              variant="h6" 
+              noWrap 
+              component="div" 
+              sx={{ 
+                display: { xs: 'none', sm: 'block' }, 
+                fontWeight: 600, 
+                letterSpacing: '0.5px' 
+              }}
+            >
+              {headerTitle}
+            </Typography>
+            <Box sx={{ flexGrow: 1 }} />
+            {/* Icônes de la barre du haut */}
+            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+              <Tooltip title="Aide">
+                <IconButton color="inherit">
+                  <HelpIcon />
+                </IconButton>
+              </Tooltip>
+              <Tooltip title="Notifications">
+                <IconButton
+                  color="inherit"
+                  onClick={handleNotificationMenuOpen}
                 >
-                  <PersonIcon fontSize="small" />
-                </Avatar>
-              </IconButton>
-            </Tooltip>
-          </Box>
-        </Toolbar>
-      </AppBarStyled>
-      
-      {/* Menu profil */}
-      <Menu
-        anchorEl={anchorEl}
-        id="profile-menu"
-        keepMounted
-        open={isProfileMenuOpen}
-        onClose={handleMenuClose}
-        PaperProps={{
-          elevation: 3,
-          sx: { minWidth: 200 }
-        }}
-        transformOrigin={{ horizontal: 'right', vertical: 'top' }}
-        anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
-      >
-        <Box sx={{ px: 2, py: 1.5, display: 'flex', alignItems: 'center' }}>
-          <Avatar sx={{ bgcolor: theme.palette.secondary.main, mr: 1.5 }}>
-            <PersonIcon />
-          </Avatar>
-          <Box>
-            <Typography variant="subtitle1" fontWeight="medium">Martin Dubois</Typography>
-            <Typography variant="body2" color="text.secondary">Admin</Typography>
-          </Box>
-        </Box>
-        <Divider />
-        <MenuItem onClick={handleMenuClose}>
-          <ListItemIcon>
-            <AccountCircleIcon fontSize="small" />
-          </ListItemIcon>
-          Mon profil
-        </MenuItem>
-        <MenuItem onClick={handleMenuClose}>
-          <ListItemIcon>
-            <SettingsIcon fontSize="small" />
-          </ListItemIcon>
-          Paramètres
-        </MenuItem>
-        <Divider />
-        <MenuItem onClick={handleMenuClose}>
-          <ListItemIcon>
-            <LogoutIcon fontSize="small" />
-          </ListItemIcon>
-          Déconnexion
-        </MenuItem>
-      </Menu>
-      
-     
-      {/* Drawer (menu latéral) */}
-      <DrawerStyled variant="permanent" open={open}>
-        <DrawerHeader>
-          {open && (
-            <Box sx={{ display: 'flex', alignItems: 'center', ml: 1 }}>
-              <Avatar 
-                sx={{ 
-                  bgcolor: theme.palette.primary.main,
-                  width: 36, 
-                  height: 36
-                }}
-              >
-                IA
-              </Avatar>
-              <Typography 
-                variant="h6" 
-                sx={{ 
-                  ml: 1.5, 
-                  fontWeight: 600,
-                  fontSize: '1.125rem'
-                }}
-              >
-                Inventory AI
-              </Typography>
-            </Box>
-          )}
-          {/* <IconButton onClick={handleDrawerToggle}>
-            <ChevronLeftIcon />
-          </IconButton> */}
-        </DrawerHeader>
-        <Divider />
-        
-        {/* Liste des éléments du menu */}
-        <List sx={{ px: 1 }}>
-          {menuItems.map((item, index) => (
-            <Box key={item.text}>
-              <ListItem 
-                disablePadding
-                sx={{ 
-                  display: 'block', 
-                  mb: 0.5,
-                  borderRadius: 1,
-                  bgcolor: selectedIndex === index ? alpha(theme.palette.primary.main, 0.1) : 'transparent',
-                  '&:hover': {
-                    bgcolor: alpha(theme.palette.primary.main, 0.05)
-                  }
-                }}
-              >
-                <ListItemButton
-                    component={Link} // ← très important
-                    to={item.path}   
-                    selected={selectedIndex === index}
-                    onClick={(event) => handleListItemClick(event, index, Boolean(item.subMenu))}
-                    sx={{
-                        minHeight: 48,
-                        justifyContent: open ? 'initial' : 'center',
-                        px: 2.5,
-                        borderRadius: 1,
-                    }}
-                    >
-                   <ListItemIcon
-                    sx={{
-                      minWidth: 0,
-                      mr: open ? 3 : 'auto',
-                      justifyContent: 'center',
-                      color: selectedIndex === index ? theme.palette.primary.main : 'inherit'
+                  <Badge badgeContent={4} color="error">
+                    <NotificationsIcon />
+                  </Badge>
+                </IconButton>
+              </Tooltip>
+              <Tooltip title="Mon profil">
+                <IconButton
+                  edge="end"
+                  color="inherit"
+                  onClick={handleProfileMenuOpen}
+                  sx={{ ml: 1 }}
+                >
+                  <Avatar 
+                    sx={{ 
+                      width: 32, 
+                      height: 32, 
+                      bgcolor: theme.palette.secondary.main,
+                      border: '2px solid white',
                     }}
                   >
-                    {item.icon}
-                  </ListItemIcon>
-                  <ListItemText 
-                    primary={item.text} 
-                    sx={{ 
-                      opacity: open ? 1 : 0,
-                      '& .MuiTypography-root': {
-                        fontWeight: selectedIndex === index ? 500 : 400,
-                        color: selectedIndex === index ? theme.palette.primary.main : 'inherit'
-                      }
-                    }} 
-                  />
-                  {open && item.badge && (
-                    <Badge 
-                      badgeContent={item.badge} 
-                      color="error" 
-                      sx={{ ml: 1 }}
-                    />
-                  )}
-                  {open && item.subMenu && (
-                    <KeyboardArrowDownIcon 
+                    <PersonIcon fontSize="small" />
+                  </Avatar>
+                </IconButton>
+              </Tooltip>
+            </Box>
+          </Toolbar>
+        </AppBarStyled>
+        {/* Menu profil */}
+        <Menu
+          anchorEl={anchorEl}
+          id="profile-menu"
+          keepMounted
+          open={isProfileMenuOpen}
+          onClose={handleMenuClose}
+          PaperProps={{
+            elevation: 3,
+            sx: { minWidth: 200 },
+          }}
+          transformOrigin={{ horizontal: 'right', vertical: 'top' }}
+          anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
+        >
+          <Box sx={{ px: 2, py: 1.5, display: 'flex', alignItems: 'center' }}>
+            <Avatar sx={{ bgcolor: theme.palette.secondary.main, mr: 1.5 }}>
+              <PersonIcon />
+            </Avatar>
+            <Box>
+              <Typography variant="subtitle1" fontWeight="medium">Martin Dubois</Typography>
+              <Typography variant="body2" color="text.secondary">Admin</Typography>
+            </Box>
+          </Box>
+          <Divider />
+          <MenuItem onClick={handleMenuClose}>
+            <ListItemIcon>
+              <AccountCircleIcon fontSize="small" />
+            </ListItemIcon>
+            Mon profil
+          </MenuItem>
+          <MenuItem onClick={handleMenuClose}>
+            <ListItemIcon>
+              <SettingsIcon fontSize="small" />
+            </ListItemIcon>
+            Paramètres
+          </MenuItem>
+          <Divider />
+          <MenuItem onClick={handleMenuClose}>
+            <ListItemIcon>
+              <LogoutIcon fontSize="small" />
+            </ListItemIcon>
+            Déconnexion
+          </MenuItem>
+        </Menu>
+        {/* Drawer (menu latéral) */}
+        <DrawerStyled variant="permanent" open={open}>
+          <DrawerHeader>
+            {open && (
+              <Box sx={{ display: 'flex', alignItems: 'center', ml: 1 }}>
+                <Avatar 
+                  sx={{ 
+                    bgcolor: theme.palette.primary.main,
+                    width: 36,
+                    height: 36,
+                  }}
+                >
+                  IA
+                </Avatar>
+                <Typography 
+                  variant="h6" 
+                  sx={{ 
+                    ml: 1.5, 
+                    fontWeight: 600,
+                    fontSize: '1.125rem',
+                  }}
+                >
+                  Inventory AI
+                </Typography>
+              </Box>
+            )}
+          </DrawerHeader>
+          <Divider />
+          {/* Liste des éléments du menu */}
+          <List sx={{ px: 1 }}>
+            {menuItems.map((item, index) => (
+              <Box key={item.text}>
+                <ListItem disablePadding sx={{ display: 'block', mb: 0.5, borderRadius: 1 }}>
+                  <ListItemButton
+                    component={Link}
+                    to={item.path}
+                    selected={selectedIndex === index}
+                    onClick={(event) => handleListItemClick(event, index, Boolean(item.subMenu), item.text)}
+                    sx={{
+                      minHeight: 48,
+                      justifyContent: open ? 'initial' : 'center',
+                      px: 2.5,
+                      borderRadius: 1,
+                    }}
+                  >
+                    <ListItemIcon
+                      sx={{
+                        minWidth: 0,
+                        mr: open ? 3 : 'auto',
+                        justifyContent: 'center',
+                        color: selectedIndex === index ? theme.palette.primary.main : 'inherit',
+                      }}
+                    >
+                      {item.icon}
+                    </ListItemIcon>
+                    <ListItemText 
+                      primary={item.text} 
                       sx={{ 
-                        transform: expandedItem === index ? 'rotate(180deg)' : 'rotate(0)',
-                        transition: '0.3s',
-                        ml: 1,
-                        fontSize: '1.2rem'
+                        opacity: open ? 1 : 0,
+                        '& .MuiTypography-root': {
+                          fontWeight: selectedIndex === index ? 500 : 400,
+                          color: selectedIndex === index ? theme.palette.primary.main : 'inherit',
+                        },
                       }} 
                     />
-                  )}
-                </ListItemButton>
-              </ListItem>
-              
-              {/* Sous-menu */}
+                    {open && item.badge && (
+                      <Badge 
+                        badgeContent={item.badge} 
+                        color="error" 
+                        sx={{ ml: 1 }}
+                      />
+                    )}
+                    {open && item.subMenu && (
+                      <KeyboardArrowDownIcon 
+                        sx={{ 
+                          transform: expandedItem === index ? 'rotate(180deg)' : 'rotate(0)',
+                          transition: '0.3s',
+                          ml: 1,
+                          fontSize: '1.2rem',
+                        }} 
+                      />
+                    )}
+                  </ListItemButton>
+                </ListItem>
+                {/* Sous-menu */}
                 {open && item.subMenu && expandedItem === index && (
                   <Box sx={{ pl: 4, mb: 1 }}>
-                    {item.subMenu.map((subItem, subIndex) => (
-                      <ListItem 
-                        key={subItem.text}
-                        disablePadding
-                        sx={{ 
-                          borderRadius: 1,
-                          '&:hover': {
-                            bgcolor: alpha(theme.palette.primary.main, 0.05)
-                          }
-                        }}
-                      >
+                    {item.subMenu.map((subItem) => (
+                      <ListItem key={subItem.text} disablePadding sx={{ borderRadius: 1 }}>
                         <ListItemButton
-                          component={Link} // Ajout du composant Link pour la navigation
-                          to={subItem.path}  // Lien vers le chemin du sous-menu
+                          component={Link}
+                          to={subItem.path}
                           sx={{
                             py: 0.75,
                             minHeight: 36,
                             borderRadius: 1,
                           }}
                         >
+                          {subItem.icon && (
+                            <ListItemIcon
+                              sx={{
+                                minWidth: 0,
+                                mr: 2,
+                                justifyContent: 'center',
+                                color: 'inherit',
+                              }}
+                            >
+                              {subItem.icon}
+                            </ListItemIcon>
+                          )}
                           <ListItemText 
                             primary={subItem.text}
                             primaryTypographyProps={{
                               fontSize: '0.875rem',
-                              fontWeight: 400
+                              fontWeight: 400,
                             }}
                           />
                         </ListItemButton>
@@ -494,30 +469,28 @@ const VerticalNavbar = ({ children }) => {
                     ))}
                   </Box>
                 )}
-            </Box>
-          ))}
-        </List>
-        
-        {/* Infos en bas du menu */}
-        {open && (
-          <>
-            <Box sx={{ flexGrow: 1 }} />
-            <Divider />
-            <Box sx={{ p: 2 }}>
-              <Typography variant="body2" color="text.secondary" align="center">
-                Inventory AI v1.0.0
-              </Typography>
-            </Box>
-          </>
-        )}
-      </DrawerStyled>
-      
-      {/* Contenu principal */}
-      <Box component="main" sx={{ flexGrow: 1, p: 3 }}>
-        <DrawerHeader /> {/* Espace pour que le contenu commence sous l'AppBar */}
-        {children}
+              </Box>
+            ))}
+          </List>
+          {/* Infos en bas du menu */}
+          {open && (
+            <>
+              <Box sx={{ flexGrow: 1 }} />
+              <Divider />
+              <Box sx={{ p: 2 }}>
+                <Typography variant="body2" color="text.secondary" align="center">
+                  Inventory AI v1.0.0
+                </Typography>
+              </Box>
+            </>
+          )}
+        </DrawerStyled>
+        {/* Contenu principal */}
+        <Box component="main" sx={{ flexGrow: 1, p: 3 }}>
+          <DrawerHeader />
+          {children}
+        </Box>
       </Box>
-    </Box>
     </div>
   );
 };

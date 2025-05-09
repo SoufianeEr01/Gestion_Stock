@@ -1,6 +1,6 @@
 package com.gs.project_gestion_stock.Controller;
 
-import com.gs.project_gestion_stock.Model.Emplacement;
+import com.gs.project_gestion_stock.Dto.EmplacementDTO;
 import com.gs.project_gestion_stock.service.EmplacementService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -19,25 +19,26 @@ public class EmplacementController {
     }
 
     @GetMapping
-    public List<Emplacement> getAllEmplacements() {
+    public List<EmplacementDTO> getAllEmplacements() {
         return emplacementService.getAllEmplacements();
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Emplacement> getEmplacementById(@PathVariable int id) {
+    public ResponseEntity<EmplacementDTO> getEmplacementById(@PathVariable int id) {
         return emplacementService.getEmplacementById(id)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
 
     @PostMapping
-    public Emplacement createEmplacement(@RequestBody Emplacement emplacement) {
-        return emplacementService.createEmplacement(emplacement);
+    public ResponseEntity<EmplacementDTO> createEmplacement(@RequestBody EmplacementDTO emplacementDTO) {
+        EmplacementDTO created = emplacementService.createEmplacement(emplacementDTO);
+        return ResponseEntity.ok(created);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Emplacement> updateEmplacement(@PathVariable int id, @RequestBody Emplacement emplacement) {
-        Emplacement updated = emplacementService.updateEmplacement(id, emplacement);
+    public ResponseEntity<EmplacementDTO> updateEmplacement(@PathVariable int id, @RequestBody EmplacementDTO emplacementDTO) {
+        EmplacementDTO updated = emplacementService.updateEmplacement(id, emplacementDTO);
         if (updated == null) {
             return ResponseEntity.notFound().build();
         }

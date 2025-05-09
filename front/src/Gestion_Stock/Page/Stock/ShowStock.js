@@ -51,7 +51,7 @@ const ShowStock = ({ stocks, onEdit, onDelete }) => {
   return (
     <Box>
       {/* Barre de recherche */}
-      <Paper elevation={2} sx={{ p: 2, mb: 3, display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderRadius: 2 }}>
+      <Paper elevation={3} sx={{ p: 2, mb: 3, display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderRadius: 2 }}>
         <TextField
           size="small"
           placeholder="Rechercher par produit ou emplacement..."
@@ -68,12 +68,12 @@ const ShowStock = ({ stocks, onEdit, onDelete }) => {
       </Paper>
 
       {/* Tableau des stocks */}
-      <TableContainer component={Paper}>
+      <TableContainer component={Paper} sx={{elevation: 4, borderRadius: 2}}>
         <Table>
           <TableHead>
             <TableRow>
-              <TableCell>Produit</TableCell>
               <TableCell>Emplacement</TableCell>
+              <TableCell>Produit</TableCell>
               <TableCell>Quantité Importée</TableCell>
               <TableCell>Quantité Réservée</TableCell>
               <TableCell>Seuil Réapprovisionnement</TableCell>
@@ -84,8 +84,8 @@ const ShowStock = ({ stocks, onEdit, onDelete }) => {
           <TableBody>
             {currentStocks.map((stock) => (
               <TableRow key={stock.id}>
+              <TableCell sx={{ fontWeight: 'bold' }}>{stock.emplacement?.nom}</TableCell>
                 <TableCell>{stock.produit?.nom}</TableCell>
-                <TableCell>{stock.emplacement?.nom}</TableCell>
                 <TableCell>{stock.quantite_importe}</TableCell>
                 <TableCell>{stock.quantite_reserver}</TableCell>
                 <TableCell>{stock.seuil_reapprovisionnement}</TableCell>

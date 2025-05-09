@@ -21,7 +21,6 @@ const PagePrincipalStock = () => {
     try {
       const data = await getAllStocks();
       setStocks(data);
-      console.log("Stocks récupérés :", data);
     } catch (error) {
       console.error("Erreur lors de la récupération des stocks :", error);
     } finally {

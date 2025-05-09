@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { TextField, Button, Box, Select, MenuItem, InputLabel, FormControl } from '@mui/material';
-import { createLocation } from '../../Api/ApiLocation'; 
+import { toast } from 'react-toastify';
+import { createLocation } from '../../Api/ApiLocation';
 
 const AddLocation = ({ onLocationAdded, onClose, fetchLocations }) => {
   const [nom, setNom] = useState('');
@@ -11,10 +12,13 @@ const AddLocation = ({ onLocationAdded, onClose, fetchLocations }) => {
     e.preventDefault();
     try {
       await createLocation({ nom, adresse, type });
+      toast.success('Emplacement ajouté avec succès');
       onLocationAdded();
       fetchLocations();
+      onClose(); // facultatif si tu veux fermer après ajout
     } catch (error) {
-      console.error('Erreur lors de l\'ajout de l\'emplacement:', error);
+      console.error("Erreur lors de l'ajout de l'emplacement:", error);
+      toast.error("Échec de l'ajout de l'emplacement");
     }
   };
 
@@ -23,14 +27,10 @@ const AddLocation = ({ onLocationAdded, onClose, fetchLocations }) => {
       <Box display="flex" flexDirection="column" gap={2}>
         <TextField label="Nom" value={nom} onChange={(e) => setNom(e.target.value)} required />
         <TextField label="Adresse" value={adresse} onChange={(e) => setAdresse(e.target.value)} required />
-        
+
         <FormControl required>
           <InputLabel>Type</InputLabel>
-          <Select
-            value={type}
-            onChange={(e) => setType(e.target.value)}
-            label="Type"
-          >
+          <Select value={type} onChange={(e) => setType(e.target.value)} label="Type">
             <MenuItem value="MAGASIN">MAGASIN</MenuItem>
             <MenuItem value="ENTREPOT">ENTREPOT</MenuItem>
             <MenuItem value="BOUTIQUE">BOUTIQUE</MenuItem>
@@ -39,12 +39,12 @@ const AddLocation = ({ onLocationAdded, onClose, fetchLocations }) => {
         </FormControl>
 
         <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 3 }}>
-                <Button variant="outlined" color="primary" type="reset" sx={{ mr: 2 }} onClick={onClose}>
-                  Annuler
-                </Button>
-                <Button variant="contained" type="submit">
-                  Ajouter
-                </Button>
+          <Button variant="outlined" color="primary" type="reset" sx={{ mr: 2 }} onClick={onClose}>
+            Annuler
+          </Button>
+          <Button variant="contained" type="submit">
+            Ajouter
+          </Button>
         </Box>
       </Box>
     </form>
