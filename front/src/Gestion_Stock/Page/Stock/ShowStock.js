@@ -51,7 +51,7 @@ const ShowStock = ({ stocks, onEdit, onDelete }) => {
   return (
     <Box>
       {/* Barre de recherche */}
-      <Paper elevation={2} sx={{ p: 2, mb: 3, display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderRadius: 2 }}>
+      <Paper elevation={3} sx={{ p: 2, mb: 3, display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderRadius: 2 }}>
         <TextField
           size="small"
           placeholder="Rechercher par produit ou emplacement..."
@@ -68,7 +68,7 @@ const ShowStock = ({ stocks, onEdit, onDelete }) => {
       </Paper>
 
       {/* Tableau des stocks */}
-      <TableContainer component={Paper}>
+      <TableContainer component={Paper} sx={{elevation: 4, borderRadius: 2}}>
         <Table>
           <TableHead>
             <TableRow>

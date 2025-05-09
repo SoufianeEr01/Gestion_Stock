@@ -11,6 +11,7 @@ import {
 import { getAllStocks } from '../../Api/ApiStock';
 import { getAllLocations } from '../../Api/ApiLocation';
 import { createMovement } from '../../Api/ApiMovementStock';
+import { toast } from 'react-toastify';
 
 const AddMovement = ({ onMovementAdded, onClose }) => {
   const [stocks, setStocks] = useState([]);
@@ -78,12 +79,14 @@ const AddMovement = ({ onMovementAdded, onClose }) => {
       };
       await createMovement(payload);
       setSuccess(true);
+      toast.success('Mouvement ajouté avec succès');
       setTimeout(() => {
         onMovementAdded();
         onClose();
       }, 1500);
     } catch (err) {
       setError("Erreur lors de l'ajout du mouvement");
+      toast.error("Échec de l'ajout du mouvement");
     } finally {
       setLoading(false);
     }
@@ -102,9 +105,6 @@ const AddMovement = ({ onMovementAdded, onClose }) => {
 
   return (
     <Container maxWidth="md">
-      {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
-      {success && <Alert severity="success" sx={{ mb: 2 }}>Mouvement ajouté avec succès !</Alert>}
-
       <FormControl fullWidth sx={{ mb: 2 }}>
         <InputLabel id="stock-label">Stock</InputLabel>
         <Select

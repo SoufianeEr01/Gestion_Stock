@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import {
   Box, Card, Typography, Grid, Chip, Divider, Paper, IconButton,
   useTheme, List, ListItem, ListItemIcon, ListItemText,
-  Badge, Collapse, TextField, InputAdornment, Button
+  Badge, Collapse, TextField, InputAdornment, Button, Pagination
 } from '@mui/material';
 import {
   ArrowForward, CalendarToday, Person, Inventory, LocationOn,
@@ -184,7 +184,7 @@ const ShowMovements = ({ movements }) => {
         />
       </Paper>
 
-      <Grid container spacing={2}>
+      <Grid container spacing={2} justifyContent="center" alignItems="center">
         {displayedMovements.map((m) => (
           <Grid item xs={12} sm={6} md={4} lg={3} key={m.id}>
             <MovementCard
@@ -198,24 +198,17 @@ const ShowMovements = ({ movements }) => {
 
       {/* Pagination Controls */}
       {totalPages > 1 && (
-        <Box sx={{ display: 'flex', justifyContent: 'center', mt: 3 }}>
-          <Button
-            variant="outlined"
-            onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
-            disabled={currentPage === 1}
-            sx={{ mx: 1 }}
-          >
-            Précédent
-          </Button>
-          <Typography sx={{ mt: 1 }}>{currentPage} / {totalPages}</Typography>
-          <Button
-            variant="outlined"
-            onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
-            disabled={currentPage === totalPages}
-            sx={{ mx: 1 }}
-          >
-            Suivant
-          </Button>
+        <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', mt: 3 }}>
+          <Pagination
+            count={totalPages} // Nombre total de pages
+            page={currentPage} // Page actuelle
+            onChange={(event, value) => setCurrentPage(value)} // Gestion du changement de page
+            color="primary" // Couleur des boutons
+            shape="circular" // Forme circulaire des boutons
+            size="medium" // Taille des boutons
+            hidePrevButton // Masquer le bouton "Précédent"
+            hideNextButton // Masquer le bouton "Suivant"
+          />
         </Box>
       )}
     </Box>

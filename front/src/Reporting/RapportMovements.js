@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { 
   Box, 
   Container, 
@@ -21,7 +21,9 @@ import {
   TextField,
   CircularProgress,
   Card,
-  CardContent
+  CardContent,
+  TablePagination,
+  Divider
 } from '@mui/material';
 import { 
   BarChart, 
@@ -38,6 +40,7 @@ import {
   ResponsiveContainer,
   Cell 
 } from 'recharts';
+
 import { format, parseISO, startOfMonth, endOfMonth, eachMonthOfInterval, subMonths } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { 
@@ -51,6 +54,9 @@ import {
 } from '@mui/icons-material';
 
 import { getAllMovements } from '../Gestion_Stock/Api/ApiMovementStock';
+import jsPDF from 'jspdf';
+import 'jspdf-autotable'; // Pour générer des tableaux dans le PDF
+import html2canvas from 'html2canvas';
 
 // Fonction pour formater une date
 const formatDate = (dateString) => {
@@ -142,8 +148,41 @@ const generateMovementTypeData = (data) => {
 };
 
 // Générer un PDF (simulation)
-const generatePDF = (reportType) => {
-  alert(`Génération de PDF pour : ${reportType}`);
+const generatePDF = (reportType, data) => {
+  const doc = new jsPDF();
+
+  // Titre du rapport
+  doc.setFontSize(18);
+  doc.text(`Rapport : ${reportType}`, 14, 20);
+
+  if (reportType === 'transfer-report') {
+    // Ajouter un tableau manuellement
+    doc.setFontSize(12);
+    const startX = 14;
+    const startY = 30;
+    const rowHeight = 10;
+    const colWidths = [50, 50, 40, 40]; // Largeurs des colonnes
+
+    // En-têtes du tableau
+    const headers = ['Source', 'Destination', 'Nombre de Transferts', 'Quantité Totale'];
+    headers.forEach((header, index) => {
+      doc.text(header, startX + colWidths.slice(0, index).reduce((a, b) => a + b, 0), startY);
+    });
+
+    // Contenu du tableau
+    data.forEach((transfer, rowIndex) => {
+      const rowY = startY + (rowIndex + 1) * rowHeight;
+      doc.text(transfer.source, startX, rowY);
+      doc.text(transfer.destination, startX + colWidths[0], rowY);
+      doc.text(transfer.count.toString(), startX + colWidths[0] + colWidths[1], rowY);
+      doc.text(transfer.totalQuantity.toString(), startX + colWidths[0] + colWidths[1] + colWidths[2], rowY);
+    });
+  } else {
+    doc.text('Aucune donnée disponible pour ce rapport.', 14, 30);
+  }
+
+  // Sauvegarder le fichier PDF
+  doc.save(`${reportType}.pdf`);
 };
 
 // Composant principal
@@ -157,6 +196,9 @@ const StockMovementDashboard = () => {
   const [productFilter, setProductFilter] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [page, setPage] = useState(1); // Page actuelle (1-based index)
+  const [rowsPerPage, setRowsPerPage] = useState(5); // Nombre de lignes par page
+  const chartRef = useRef(null); // Référence pour le graphique
 
   // Charger les données au montage du composant
   useEffect(() => {
@@ -299,30 +341,9 @@ const StockMovementDashboard = () => {
     <Container maxWidth="xl" sx={{ mt: 4, mb: 4 }}>
       <Box sx={{ mb: 4, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <Typography variant="h4" component="h1" gutterBottom fontWeight="bold">
-          Tableau de Bord des Mouvements de Stock
+          Rapports des Mouvements de Stock
         </Typography>
-        <Box>
-          <Button 
-            variant="contained" 
-            startIcon={<DownloadIcon />} 
-            onClick={() => generatePDF('dashboard')}
-            sx={{ ml: 2 }}
-          >
-            Exporter PDF
-          </Button>
-          <Button 
-            variant="outlined" 
-            sx={{ ml: 2 }}
-            onClick={() => {
-              setPeriod('all');
-              setSourceLocation('all');
-              setDestinationLocation('all');
-              setProductFilter('');
-            }}
-          >
-            Réinitialiser
-          </Button>
-        </Box>
+        <Divider sx={{ mb: 2 }} />
       </Box>
       
       {/* Filtres */}
@@ -406,7 +427,7 @@ const StockMovementDashboard = () => {
             </CardContent>
           </Card>
         </Grid>
-        <Grid item xs={12} sm={6} md={3}>
+        <Grid item xs={12} spacing={3} sm={6} md={3}>
           <Card elevation={3} sx={{ height: '100%', background: 'linear-gradient(45deg, #FF9800 30%, #FFB74D 90%)' }}>
             <CardContent>
               <Typography variant="h6" component="div" sx={{ color: 'white', fontWeight: 'bold', display: 'flex', alignItems: 'center', mb: 2 }}>
@@ -472,7 +493,7 @@ const StockMovementDashboard = () => {
                 variant="contained" 
                 color="primary" 
                 startIcon={<DownloadIcon />}
-                onClick={() => generatePDF('monthly-report')}
+                onClick={() => generatePDF('monthly-report', null, chartRef)}
               >
                 Exporter ce Rapport
               </Button>
@@ -480,7 +501,7 @@ const StockMovementDashboard = () => {
             
             <Grid container spacing={4}>
               <Grid item xs={12} lg={8}>
-                <Paper elevation={2} sx={{ p: 2, height: '400px' }}>
+                <Paper elevation={2} sx={{ p: 2, height: '400px', width:'600px'}} ref={chartRef}>
                   <Typography variant="subtitle1" gutterBottom fontWeight="bold">
                     Évolution des Mouvements par Type
                   </Typography>
@@ -508,11 +529,11 @@ const StockMovementDashboard = () => {
               <Typography variant="h6" component="h3">
                 Rapport des Transferts entre Emplacements
               </Typography>
-              <Button 
-                variant="contained" 
-                color="primary" 
+              <Button
+                variant="contained"
+                color="primary"
                 startIcon={<DownloadIcon />}
-                onClick={() => generatePDF('transfer-report')}
+                onClick={() => generatePDF('transfer-report', locationTransferData)}
               >
                 Exporter ce Rapport
               </Button>
@@ -530,16 +551,27 @@ const StockMovementDashboard = () => {
                     </TableRow>
                   </TableHead>
                   <TableBody>
-                    {locationTransferData.map((transfer, index) => (
-                      <TableRow key={index}>
-                        <TableCell>{transfer.source}</TableCell>
-                        <TableCell>{transfer.destination}</TableCell>
-                        <TableCell align="right">{transfer.count}</TableCell>
-                        <TableCell align="right">{transfer.totalQuantity}</TableCell>
-                      </TableRow>
-                    ))}
+                    {locationTransferData.slice((page - 1) * rowsPerPage, page * rowsPerPage) // Pagination logic
+                      .map((transfer, index) => (
+                        <TableRow key={index}>
+                          <TableCell>{transfer.source}</TableCell>
+                          <TableCell>{transfer.destination}</TableCell>
+                          <TableCell align="right">{transfer.count}</TableCell>
+                          <TableCell align="right">{transfer.totalQuantity}</TableCell>
+                        </TableRow>
+                      ))}
                   </TableBody>
                 </Table>
+                <TablePagination
+                  component="div"
+                  count={locationTransferData.length} // Total number of rows
+                  page={page - 1} // Current page (0-based index)
+                  onPageChange={(event, newPage) => setPage(newPage + 1)} // Update page state
+                  rowsPerPage={rowsPerPage} // Rows per page
+                  onRowsPerPageChange={(event) => setRowsPerPage(parseInt(event.target.value, 10))} // Update rows per page
+                  rowsPerPageOptions={[5, 10, 25]} // Options for rows per page
+                  labelRowsPerPage="Lignes par page"
+                />
               </TableContainer>
             ) : (
               <Box sx={{ p: 4, textAlign: 'center' }}>
