@@ -15,6 +15,7 @@ import PagePrincipalStock from './Gestion_Stock/Page/Stock/PagePrincipalStock';
 import PagePrincipaleMovement from './Gestion_Stock/Page/MovementStock/PagePrincipaleMovement';
 import RapportMovements from './Reporting/RapportMovements';
 import RapportStock from './Reporting/RapportStock';
+import Commande from './Commandes/commande'
 
 function App() {
   return (
@@ -23,6 +24,7 @@ function App() {
         <Routes>
           <Route path="/" element={<StockDashboard />} />
           <Route path="/product" element={<PagePrincipal />} />
+          <Route path="/orders" element={<Commande />} />
           <Route path="/location" element={<PagePrincipaleLocation />} />
           <Route path="/movement" element={<PagePrincipaleMovement />} />
           <Route path="/stock" element={<PagePrincipalStock />} />

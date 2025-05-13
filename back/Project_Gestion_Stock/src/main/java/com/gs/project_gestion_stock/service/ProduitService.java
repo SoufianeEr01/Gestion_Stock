@@ -31,6 +31,7 @@ public class ProduitService {
         return produitRepository.findById(id).map(p -> {
             p.setNom(updatedProduit.getNom());
             p.setDescription(updatedProduit.getDescription());
+            p.setId_fournisseur(updatedProduit.getId_fournisseur());
             p.setCategorie(updatedProduit.getCategorie());
             p.setImage(updatedProduit.getImage());
             p.setCode_bare(updatedProduit.getCode_bare());

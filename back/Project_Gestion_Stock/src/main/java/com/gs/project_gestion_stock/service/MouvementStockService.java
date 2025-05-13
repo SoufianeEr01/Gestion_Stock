@@ -11,6 +11,7 @@ import com.gs.project_gestion_stock.Model.TypeMouvement;
 import com.gs.project_gestion_stock.Repository.EmplacementRepository;
 import com.gs.project_gestion_stock.Repository.MouvementStockRepository;
 import com.gs.project_gestion_stock.Repository.StockRepository;
+import com.gs.project_gestion_stock.messaging.StockAlertProducer;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -19,6 +20,8 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
 @Service
 @RequiredArgsConstructor
 public class MouvementStockService {
@@ -26,6 +29,7 @@ public class MouvementStockService {
     private final MouvementStockRepository mouvementStockRepository;
     private final StockRepository stockRepository;
     private final EmplacementRepository emplacementRepository;
+    private final StockAlertProducer stockAlertProducer;
 
     public List<MovementDTO> findAll() {
         List<MouvementStock> mouvements = mouvementStockRepository.findAll();
@@ -42,13 +46,10 @@ public class MouvementStockService {
 
     @Transactional
     public MovementDTO save(MovementDTO dto) {
-
-        // Vérification du type de mouvement
         if (dto.getType() == null || dto.getType() != TypeMouvement.TRANSFERT) {
             throw new IllegalArgumentException("Seuls les mouvements de type TRANSFERT sont autorisés.");
         }
 
-        // Récupération du stock source
         Stock stockSource = stockRepository.findById(dto.getStock().getId())
                 .orElseThrow(() -> new EntityNotFoundException("Stock source introuvable."));
 
@@ -57,22 +58,51 @@ public class MouvementStockService {
             throw new IllegalArgumentException("La quantité transférée doit être supérieure à 0.");
         }
 
-        // Vérification que l'emplacement source du stock correspond à l'emplacement dans le DTO
         if (stockSource.getEmplacement() == null
                 || stockSource.getEmplacement().getId() != dto.getEmplacement_source().getId()) {
             throw new IllegalArgumentException("Le stock ne correspond pas à l'emplacement source.");
         }
 
-        // Vérification de la quantité disponible dans l'emplacement source
         if (stockSource.getQuantite_importe() < quantite) {
             throw new IllegalArgumentException("Quantité insuffisante dans l'emplacement source.");
         }
 
-        // Mise à jour du stock source
+        // ✅ Mise à jour du stock source
         stockSource.setQuantite_importe(stockSource.getQuantite_importe() - quantite);
         stockRepository.save(stockSource);
 
-        // Recherche ou création du stock destination
+        // ✅ Vérification et envoi de l'alerte sur le stock source
+        int limiteMinimale = stockSource.getQuantite_reserver() + stockSource.getSeuil_reapprovisionnement();
+        long joursRestants = ChronoUnit.DAYS.between(LocalDate.now(), stockSource.getDate_expiration());
+
+        boolean seuilProche = stockSource.getQuantite_importe() <= limiteMinimale;
+        boolean expirationProche = joursRestants <= 7;
+
+        String typeAlerte = "";
+        if (seuilProche && expirationProche) {
+            typeAlerte = "BOTH";
+        } else if (seuilProche) {
+            typeAlerte = "SEUIL";
+        } else if (expirationProche) {
+            typeAlerte = "EXPIRATION";
+        }
+        if (!typeAlerte.isEmpty()) {
+            stockAlertProducer.sendStockAlert(
+                    String.valueOf(stockSource.getProduit().getId()),
+                    stockSource.getProduit().getNom(),
+                    String.valueOf(stockSource.getProduit().getCategorie()),
+                    stockSource.getProduit().getDescription(),
+                    stockSource.getProduit().getCode_bare(),
+                    stockSource.getProduit().getImage(),
+                    String.valueOf(stockSource.getProduit().getPrix_unitaire()),
+                    stockSource.getQuantite_importe(),
+                    stockSource.getEmplacement().getNom(),
+                    stockSource.getProduit().getId_fournisseur(),
+                    typeAlerte
+            );
+        }
+
+        // ✅ Gestion du stock destination
         Stock stockDestination = stockRepository.findByProduitIdAndEmplacementId(
                 stockSource.getProduit().getId(),
                 dto.getEmplacement_destination().getId()
@@ -93,7 +123,7 @@ public class MouvementStockService {
         stockDestination.setQuantite_importe(stockDestination.getQuantite_importe() + quantite);
         stockRepository.save(stockDestination);
 
-        // Construction du MouvementStock à partir du DTO
+        // ✅ Création du mouvement
         MouvementStock mouvement = new MouvementStock();
         mouvement.setUtilisateur_id(dto.getUtilisateur_id());
         mouvement.setDate_mouvement(dto.getDate_mouvement());
@@ -101,7 +131,6 @@ public class MouvementStockService {
         mouvement.setType(dto.getType());
         mouvement.setStock(stockSource);
 
-        // Récupération des emplacements source et destination
         Emplacement emplacementSrc = emplacementRepository.findById(dto.getEmplacement_source().getId())
                 .orElseThrow(() -> new EntityNotFoundException("Emplacement source introuvable."));
         Emplacement emplacementDest = emplacementRepository.findById(dto.getEmplacement_destination().getId())

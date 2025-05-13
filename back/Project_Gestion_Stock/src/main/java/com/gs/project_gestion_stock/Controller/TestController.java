@@ -9,16 +9,21 @@ public class TestController {
 
     private final StockAlertProducer producer;
 
-    // Constructeur pour injecter la dépendance StockAlertProducer
     public TestController(StockAlertProducer producer) {
         this.producer = producer;
     }
 
-    // Méthode pour envoyer une alerte à RabbitMQ
-    @GetMapping("/alerte")
-    public String sendAlerte() {
-        // Envoi du message d'alerte avec un produit spécifique et une quantité seuil
-        producer.sendStockAlert("PROD001", 2);
-        return "Message envoyé à RabbitMQ";
-    }
+//    @GetMapping("/alerte")
+//    public String sendAlerte() {
+//        // Exemple simulé de produit
+//        String produitId = "2";
+//        String nomProduit = "Paracétamol";
+//        int quantiteRestante = 12;
+//        String nomEmplacement = "Geral";
+//        int fournisseurId = 1;
+//        String typeAlerte = "SEUIL";
+//
+//        producer.sendStockAlert(produitId, nomProduit, quantiteRestante, nomEmplacement,fournisseurId, typeAlerte);
+//        return "Message enrichi envoyé à RabbitMQ";
+//    }
 }
