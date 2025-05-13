@@ -21,7 +21,7 @@ const AddMovement = ({ onMovementAdded, onClose }) => {
   const [success, setSuccess] = useState(false);
 
   const [formData, setFormData] = useState({
-    utilisateur_id: 'admin123',
+    utilisateur_id: localStorage.getItem('email'),
     date_mouvement: new Date().toISOString().split('T')[0],
     quantite: '',
     type: 'TRANSFERT',

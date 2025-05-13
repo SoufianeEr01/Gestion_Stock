@@ -11,6 +11,7 @@ const UpdateProduct = ({ selectedProduct, onClose, fetchProducts }) => {
     prix_unitaire: selectedProduct?.prix_unitaire || '',
     quantite_commande: selectedProduct?.quantite_commande || '',
     image: selectedProduct?.image || '',
+    id_fournisseur: selectedProduct?.id_fournisseur || '' // Ajout du champ id_fournisseur
   });
 
   const [previewUrl, setPreviewUrl] = useState(selectedProduct?.image || '');
@@ -43,7 +44,7 @@ const UpdateProduct = ({ selectedProduct, onClose, fetchProducts }) => {
   const handleUpdate = async (e) => {
     e.preventDefault();
     try {
-      await updateProduit(selectedProduct.id, formData);
+      await updateProduit(selectedProduct.id, formData); // Inclut id_fournisseur
       await fetchProducts(); 
       onClose();              
     } catch (error) {
@@ -133,6 +134,17 @@ const UpdateProduct = ({ selectedProduct, onClose, fetchProducts }) => {
         name="image"
         value={formData.image}
         onChange={handleChange}
+      />
+
+      <TextField
+        margin="normal"
+        fullWidth
+        id="id_fournisseur"
+        label="ID Fournisseur"
+        name="id_fournisseur"
+        value={formData.id_fournisseur}
+        onChange={handleChange}
+        disabled
       />
 
       {/* Aperçu de l'image */}

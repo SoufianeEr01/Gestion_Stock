@@ -23,26 +23,14 @@ import {
   Card,
   CardContent,
   TablePagination,
-  Divider
+  Divider,
+  useTheme,
+  Chip,
+  alpha 
 } from '@mui/material';
-import { 
-  BarChart, 
-  Bar, 
-  PieChart, 
-  Pie, 
-  LineChart, 
-  Line, 
-  XAxis, 
-  YAxis, 
-  CartesianGrid, 
-  Tooltip, 
-  Legend, 
-  ResponsiveContainer,
-  Cell 
-} from 'recharts';
+import autoTable from 'jspdf-autotable'; // ✅ l'import correct
 
-import { format, parseISO, startOfMonth, endOfMonth, eachMonthOfInterval, subMonths } from 'date-fns';
-import { fr } from 'date-fns/locale';
+// Import toutes les icônes sans duplication
 import { 
   GetApp as DownloadIcon, 
   CompareArrows as CompareArrowsIcon, 
@@ -50,12 +38,31 @@ import {
   Search as SearchIcon, 
   FilterList as FilterIcon,
   TrendingUp,
-  TrendingDown
+  TrendingDown,
+  Inventory,
+  Refresh as RefreshIcon
 } from '@mui/icons-material';
 
+// Imports pour date-fns
+import { format, parseISO, startOfMonth, endOfMonth, eachMonthOfInterval, subMonths } from 'date-fns';
+import { fr } from 'date-fns/locale';
+
+// Imports pour Recharts
+import { 
+  LineChart, 
+  Line, 
+  XAxis, 
+  YAxis, 
+  CartesianGrid, 
+  Tooltip as RechartsTooltip, 
+  Legend, 
+  ResponsiveContainer 
+} from 'recharts';
+
+// Imports pour l'API et les outils PDF
 import { getAllMovements } from '../Gestion_Stock/Api/ApiMovementStock';
 import jsPDF from 'jspdf';
-import 'jspdf-autotable'; // Pour générer des tableaux dans le PDF
+import 'jspdf-autotable';
 import html2canvas from 'html2canvas';
 
 // Fonction pour formater une date
@@ -104,7 +111,7 @@ const generateMonthlyData = (data) => {
   return months.map(date => {
     const monthStart = startOfMonth(date);
     const monthEnd = endOfMonth(date);
-    const monthName = format(date, 'MMMM', { locale: fr });
+    const monthName = format(date, 'MMM yy', { locale: fr });
 
     const monthItems = data.filter(item => {
       try {
@@ -147,46 +154,77 @@ const generateMovementTypeData = (data) => {
   ];
 };
 
-// Générer un PDF (simulation)
-const generatePDF = (reportType, data) => {
-  const doc = new jsPDF();
+export const generatePDF = (reportType, data, chartRef) => {
+  try {
+    const doc = new jsPDF();
 
-  // Titre du rapport
-  doc.setFontSize(18);
-  doc.text(`Rapport : ${reportType}`, 14, 20);
+    // En-tête
+    const today = format(new Date(), 'dd/MM/yyyy', { locale: fr });
+    doc.setFontSize(10);
+    doc.setTextColor(100, 100, 100);
+    doc.text(`Généré le ${today}`, 14, 10);
 
-  if (reportType === 'transfer-report') {
-    // Ajouter un tableau manuellement
-    doc.setFontSize(12);
-    const startX = 14;
-    const startY = 30;
-    const rowHeight = 10;
-    const colWidths = [50, 50, 40, 40]; // Largeurs des colonnes
+    doc.setFontSize(18);
+    doc.setTextColor(0, 0, 0);
+    doc.setFont(undefined, 'bold');
+    doc.text('Rapport des Mouvements de Stock', 14, 20);
 
-    // En-têtes du tableau
-    const headers = ['Source', 'Destination', 'Nombre de Transferts', 'Quantité Totale'];
-    headers.forEach((header, index) => {
-      doc.text(header, startX + colWidths.slice(0, index).reduce((a, b) => a + b, 0), startY);
-    });
+    doc.setFontSize(14);
+    doc.setFont(undefined, 'normal');
+    doc.text(reportType === 'monthly-report' ? 'Évolution Mensuelle' : 'Transferts entre Emplacements', 14, 30);
 
-    // Contenu du tableau
-    data.forEach((transfer, rowIndex) => {
-      const rowY = startY + (rowIndex + 1) * rowHeight;
-      doc.text(transfer.source, startX, rowY);
-      doc.text(transfer.destination, startX + colWidths[0], rowY);
-      doc.text(transfer.count.toString(), startX + colWidths[0] + colWidths[1], rowY);
-      doc.text(transfer.totalQuantity.toString(), startX + colWidths[0] + colWidths[1] + colWidths[2], rowY);
-    });
-  } else {
-    doc.text('Aucune donnée disponible pour ce rapport.', 14, 30);
+    // Graphique si rapport mensuel
+    if (reportType === 'monthly-report' && chartRef?.current) {
+      html2canvas(chartRef.current).then((canvas) => {
+        const imgData = canvas.toDataURL('image/png');
+        doc.addImage(imgData, 'PNG', 14, 40, 180, 100);
+
+        finalizePDF();
+      });
+    } 
+    // Tableau si rapport de transfert
+    else if (reportType === 'transfer-report' && Array.isArray(data)) {
+      autoTable(doc, {
+        startY: 40,
+        head: [['Source', 'Destination', 'Nombre de Transferts', 'Quantité Totale']],
+        body: data.map((item) => [
+          item.source,
+          item.destination,
+          item.count,
+          item.totalQuantity,
+        ]),
+        headStyles: { fillColor: [33, 150, 243], textColor: 255 },
+        alternateRowStyles: { fillColor: [245, 245, 245] },
+      });
+
+      finalizePDF();
+    } 
+    // Si aucune donnée
+    else {
+      doc.text('Aucune donnée disponible pour ce rapport.', 14, 40);
+      finalizePDF();
+    }
+
+    function finalizePDF() {
+      const pageCount = doc.internal.getNumberOfPages();
+      for (let i = 1; i <= pageCount; i++) {
+        doc.setPage(i);
+        doc.setFontSize(10);
+        doc.setTextColor(150);
+        doc.text(`Page ${i} sur ${pageCount}`, doc.internal.pageSize.getWidth() / 2, doc.internal.pageSize.getHeight() - 10, { align: 'center' });
+      }
+
+      doc.save(`rapport-mouvements-${reportType}.pdf`);
+    }
+  } catch (error) {
+    console.error('Erreur lors de la génération du PDF:', error);
+    alert('Erreur lors de la génération du rapport PDF');
   }
-
-  // Sauvegarder le fichier PDF
-  doc.save(`${reportType}.pdf`);
 };
 
 // Composant principal
-const StockMovementDashboard = () => {
+const RapportMovements = () => {
+  const theme = useTheme();
   const [tabValue, setTabValue] = useState(0);
   const [movementsData, setMovementsData] = useState([]);
   const [filteredData, setFilteredData] = useState([]);
@@ -196,7 +234,7 @@ const StockMovementDashboard = () => {
   const [productFilter, setProductFilter] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [page, setPage] = useState(1); // Page actuelle (1-based index)
+  const [page, setPage] = useState(0); // Page actuelle (0-based pour Material-UI)
   const [rowsPerPage, setRowsPerPage] = useState(5); // Nombre de lignes par page
   const chartRef = useRef(null); // Référence pour le graphique
 
@@ -224,10 +262,10 @@ const StockMovementDashboard = () => {
     const allLocations = new Set();
 
     movementsData.forEach(item => {
-      if (item.emplacement_source) {
+      if (item.emplacement_source && item.emplacement_source.nom) {
         allLocations.add(item.emplacement_source.nom);
       }
-      if (item.emplacement_destination) {
+      if (item.emplacement_destination && item.emplacement_destination.nom) {
         allLocations.add(item.emplacement_destination.nom);
       }
     });
@@ -293,6 +331,7 @@ const StockMovementDashboard = () => {
     }
 
     setFilteredData(result);
+    setPage(0); // Réinitialiser à la première page quand les filtres changent
   }, [period, sourceLocation, destinationLocation, productFilter, movementsData]);
 
   // Préparer les données pour les graphiques
@@ -303,11 +342,29 @@ const StockMovementDashboard = () => {
   // Statistiques générales
   const totalMovements = filteredData.length;
   const totalQuantity = filteredData.reduce((sum, item) => sum + item.quantite, 0);
-  const uniqueProducts = [...new Set(filteredData.map(item => item.stock.produit.id))].length;
+  const uniqueProducts = useMemo(() => {
+    const productIds = new Set();
+    filteredData.forEach(item => {
+      if (item.stock && item.stock.produit && item.stock.produit.id) {
+        productIds.add(item.stock.produit.id);
+      }
+    });
+    return productIds.size;
+  }, [filteredData]);
 
   // Fonction pour gérer le changement d'onglet
   const handleTabChange = (event, newValue) => {
     setTabValue(newValue);
+  };
+
+  // Gestion de la pagination
+  const handleChangePage = (event, newPage) => {
+    setPage(newPage);
+  };
+
+  const handleChangeRowsPerPage = (event) => {
+    setRowsPerPage(parseInt(event.target.value, 10));
+    setPage(0);
   };
 
   // Afficher le chargement
@@ -343,23 +400,357 @@ const StockMovementDashboard = () => {
         <Typography variant="h4" component="h1" gutterBottom fontWeight="bold">
           Rapports des Mouvements de Stock
         </Typography>
-        <Divider sx={{ mb: 2 }} />
       </Box>
       
+      <Divider sx={{ mb: 2 }} />
+{/*       
       {/* Filtres */}
-      <Paper elevation={3} sx={{ p: 3, mb: 4 }}>
-        <Typography variant="h6" component="h2" gutterBottom sx={{ display: 'flex', alignItems: 'center' }}>
-          <FilterIcon size={24} sx={{ mr: 1 }} />
-          Filtres
-        </Typography>
+      
+      
+      {/* Cartes de statistiques améliorées */}
+      {/* <Grid container spacing={3} sx={{ mb: 4 }}>
+        <Grid item xs={12} sm={6} md={3}>
+          <Card 
+            elevation={2} 
+            sx={{ 
+              height: '100%', 
+              borderRadius: 2,
+              position: 'relative',
+              overflow: 'hidden',
+              background: `linear-gradient(135deg, ${theme.palette.primary.light} 30%, ${theme.palette.primary.main} 90%)`,
+              boxShadow: '0 4px 20px rgba(0,0,0,0.1)'
+            }}
+          >
+            <CardContent sx={{ p: 2.5, height: '100%' }}>
+              <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+                <Typography 
+                  variant="subtitle1" 
+                  component="div" 
+                  sx={{ 
+                    color: 'white', 
+                    fontWeight: 600, 
+                    mb: 1.5,
+                    display: 'flex',
+                    alignItems: 'center'
+                  }}
+                >
+                  <Box 
+                    sx={{ 
+                      bgcolor: 'rgba(255,255,255,0.2)', 
+                      borderRadius: '50%', 
+                      p: 0.8, 
+                      mr: 1.5,
+                      display: 'flex' 
+                    }}
+                  >
+                    <CompareArrowsIcon sx={{ fontSize: '1.2rem' }} />
+                  </Box>
+                  Total des Mouvements
+                </Typography>
+                
+                <Typography 
+                  variant="h3" 
+                  component="div" 
+                  sx={{ 
+                    color: 'white', 
+                    fontWeight: 700, 
+                    my: 'auto',
+                    textShadow: '0 2px 4px rgba(0,0,0,0.2)'
+                  }}
+                >
+                  {new Intl.NumberFormat('fr-FR').format(totalMovements)}
+                </Typography>
+                
+                <Typography 
+                  variant="body2" 
+                  sx={{ 
+                    color: 'rgba(255,255,255,0.8)', 
+                    mt: 1,
+                    fontSize: '0.85rem'
+                  }}
+                >
+                  {filteredData.length < movementsData.length 
+                    ? `${((filteredData.length / movementsData.length) * 100).toFixed(0)}% du total`
+                    : 'Tous les mouvements'}
+                </Typography>
+              </Box>
+            </CardContent>
+          </Card>
+        </Grid>
+        
+        <Grid item xs={12} sm={6} md={3}>
+          <Card 
+            elevation={2} 
+            sx={{ 
+              height: '100%', 
+              borderRadius: 2,
+              position: 'relative',
+              overflow: 'hidden',
+              background: `linear-gradient(135deg, ${theme.palette.warning.light} 30%, ${theme.palette.warning.main} 90%)`,
+              boxShadow: '0 4px 20px rgba(0,0,0,0.1)'
+            }}
+          >
+            <CardContent sx={{ p: 2.5, height: '100%' ,width: '150PX'}}>
+              <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+                <Typography 
+                  variant="subtitle1" 
+                  component="div" 
+                  sx={{ 
+                    color: 'white', 
+                    fontWeight: 600, 
+                    mb: 1.5,
+                    display: 'flex',
+                    alignItems: 'center'
+                  }}
+                >
+                  <Box 
+                    sx={{ 
+                      bgcolor: 'rgba(255,255,255,0.2)', 
+                      borderRadius: '50%', 
+                      p: 0.8, 
+                      mr: 1.5,
+                      display: 'flex' 
+                    }}
+                  >
+                    <TrendingUp sx={{ fontSize: '1.2rem' }} />
+                  </Box>
+                  Quantité Totale
+                </Typography>
+                
+                <Typography 
+                  variant="h3" 
+                  component="div" 
+                  sx={{ 
+                    color: 'white', 
+                    fontWeight: 700, 
+                    my: 'auto',
+                    textShadow: '0 2px 4px rgba(0,0,0,0.2)'
+                  }}
+                >
+                  {new Intl.NumberFormat('fr-FR').format(totalQuantity)}
+                </Typography>
+                
+                <Typography 
+                  variant="body2" 
+                  sx={{ 
+                    color: 'rgba(255,255,255,0.8)', 
+                    mt: 1,
+                    fontSize: '0.85rem'
+                  }}
+                >
+                  Somme de tous les mouvements
+                </Typography>
+              </Box>
+            </CardContent>
+          </Card>
+        </Grid>
+        
+        <Grid item xs={12} sm={6} md={3}>
+          <Card 
+            elevation={2} 
+            sx={{ 
+              height: '100%', 
+              borderRadius: 2,
+              position: 'relative',
+              overflow: 'hidden',
+              background: `linear-gradient(135deg, ${theme.palette.success.light} 30%, ${theme.palette.success.main} 90%)`,
+              boxShadow: '0 4px 20px rgba(0,0,0,0.1)'
+            }}
+          >
+            <CardContent sx={{ p: 2.5, height: '100%' }}>
+              <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+                <Typography 
+                  variant="subtitle1" 
+                  component="div" 
+                  sx={{ 
+                    color: 'white', 
+                    fontWeight: 600, 
+                    mb: 1.5,
+                    display: 'flex',
+                    alignItems: 'center'
+                  }}
+                >
+                  <Box 
+                    sx={{ 
+                      bgcolor: 'rgba(255,255,255,0.2)', 
+                      borderRadius: '50%', 
+                      p: 0.8, 
+                      mr: 1.5,
+                      display: 'flex' 
+                    }}
+                  >
+                    <Inventory sx={{ fontSize: '1.2rem' }} />
+                  </Box>
+                  Produits Concernés
+                </Typography>
+                
+                <Typography 
+                  variant="h3" 
+                  component="div" 
+                  sx={{ 
+                    color: 'white', 
+                    fontWeight: 700, 
+                    my: 'auto',
+                    textShadow: '0 2px 4px rgba(0,0,0,0.2)'
+                  }}
+                >
+                  {uniqueProducts}
+                </Typography>
+                
+                <Typography 
+                  variant="body2" 
+                  sx={{ 
+                    color: 'rgba(255,255,255,0.8)', 
+                    mt: 1,
+                    fontSize: '0.85rem'
+                  }}
+                >
+                  {uniqueProducts === 1 ? '1 produit impacté' : `${uniqueProducts} produits différents`}
+                </Typography>
+              </Box>
+            </CardContent>
+          </Card>
+        </Grid>
+        
+        <Grid item xs={12} sm={6} md={3}>
+          <Card 
+            elevation={2} 
+            sx={{ 
+              height: '100%', 
+              borderRadius: 2,
+              position: 'relative',
+              overflow: 'hidden',
+              background: `linear-gradient(135deg, ${theme.palette.info.light} 30%, ${theme.palette.info.main} 90%)`,
+              boxShadow: '0 4px 20px rgba(0,0,0,0.1)'
+            }}
+          >
+            <CardContent sx={{ p: 2.5, height: '100%' }}>
+              <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+                <Typography 
+                  variant="subtitle1" 
+                  component="div" 
+                  sx={{ 
+                    color: 'white', 
+                    fontWeight: 600, 
+                    mb: 1.5,
+                    display: 'flex',
+                    alignItems: 'center'
+                  }}
+                >
+                  <Box 
+                    sx={{ 
+                      bgcolor: 'rgba(255,255,255,0.2)', 
+                      borderRadius: '50%', 
+                      p: 0.8, 
+                      mr: 1.5,
+                      display: 'flex' 
+                    }}
+                  >
+                    <CompareArrowsIcon sx={{ fontSize: '1.2rem' }} />
+                  </Box>
+                  Transferts
+                </Typography>
+                
+                <Typography 
+                  variant="h3" 
+                  component="div" 
+                  sx={{ 
+                    color: 'white', 
+                    fontWeight: 700, 
+                    my: 'auto',
+                    textShadow: '0 2px 4px rgba(0,0,0,0.2)'
+                  }}
+                >
+                  {new Intl.NumberFormat('fr-FR').format(filteredData.filter(item => item.type === "TRANSFERT").length)}
+                </Typography>
+                
+                <Typography 
+                  variant="body2" 
+                  sx={{ 
+                    color: 'rgba(255,255,255,0.8)', 
+                    mt: 1,
+                    fontSize: '0.85rem'
+                  }}
+                >
+                  {`${((filteredData.filter(item => item.type === "TRANSFERT").length / totalMovements) * 100).toFixed(0)}% des mouvements`}
+                </Typography>
+              </Box>
+            </CardContent>
+          </Card>
+        </Grid> */}
+      {/* </Grid>  */}
+      <Paper 
+        elevation={2} 
+        sx={{ 
+          p: 3, 
+          mb: 4, 
+          borderRadius: 2,
+          background: `linear-gradient(to right, ${alpha(theme.palette.background.paper, 0.9)}, ${alpha(theme.palette.background.paper, 0.97)})`,
+          border: `1px solid ${alpha(theme.palette.primary.main, 0.1)}`
+        }}
+      >
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+          <Typography 
+            variant="h6" 
+            component="h2" 
+            sx={{ 
+              display: 'flex', 
+              alignItems: 'center',
+              color: theme.palette.text.primary,
+              fontWeight: 600
+            }}
+          >
+            <FilterIcon sx={{ mr: 1.5, color: theme.palette.primary.main }} />
+            Options de filtrage
+          </Typography>
+          
+          <Button 
+            size="small" 
+            variant="outlined" 
+            color="inherit"
+            startIcon={<RefreshIcon />}
+            onClick={() => {
+              setPeriod('all');
+              setSourceLocation('all');
+              setDestinationLocation('all');
+              setProductFilter('');
+            }}
+            sx={{ 
+              borderRadius: 1.5, 
+              textTransform: 'none',
+              fontSize: '0.8rem'
+            }}
+          >
+            Réinitialiser
+          </Button>
+        </Box>
+        
+        <Divider sx={{ mb: 2, opacity: 0.6 }} />
+        
         <Grid container spacing={3}>
           <Grid item xs={12} sm={6} md={3}>
-            <FormControl fullWidth variant="outlined">
+            <FormControl 
+              fullWidth 
+              variant="outlined" 
+              size="small"
+              sx={{
+                '& .MuiOutlinedInput-root': {
+                  borderRadius: 1.5,
+                  '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                    borderColor: theme.palette.primary.main,
+                    borderWidth: 2
+                  }
+                }
+              }}
+            >
               <InputLabel>Période</InputLabel>
               <Select
                 value={period}
                 onChange={(e) => setPeriod(e.target.value)}
                 label="Période"
+                startAdornment={
+                  <CalendarTodayIcon fontSize="small" sx={{ mr: 1, opacity: 0.7 }} />
+                }
               >
                 <MenuItem value="all">Toutes les périodes</MenuItem>
                 <MenuItem value="month">Dernier mois</MenuItem>
@@ -368,13 +759,36 @@ const StockMovementDashboard = () => {
               </Select>
             </FormControl>
           </Grid>
+          
           <Grid item xs={12} sm={6} md={3}>
-            <FormControl fullWidth variant="outlined">
+            <FormControl 
+              fullWidth 
+              variant="outlined" 
+              size="small"
+              sx={{
+                '& .MuiOutlinedInput-root': {
+                  borderRadius: 1.5,
+                }
+              }}
+            >
               <InputLabel>Emplacement Source</InputLabel>
               <Select
                 value={sourceLocation}
                 onChange={(e) => setSourceLocation(e.target.value)}
                 label="Emplacement Source"
+                startAdornment={
+                  sourceLocation !== 'all' ? (
+                    <Box 
+                      sx={{ 
+                        width: 8, 
+                        height: 8, 
+                        borderRadius: '50%', 
+                        bgcolor: theme.palette.success.main,
+                        mr: 1.5
+                      }}
+                    />
+                  ) : null
+                }
               >
                 <MenuItem value="all">Tous les emplacements</MenuItem>
                 {locations.map(location => (
@@ -383,13 +797,36 @@ const StockMovementDashboard = () => {
               </Select>
             </FormControl>
           </Grid>
+          
           <Grid item xs={12} sm={6} md={3}>
-            <FormControl fullWidth variant="outlined">
+            <FormControl 
+              fullWidth 
+              variant="outlined"
+              size="small" 
+              sx={{
+                '& .MuiOutlinedInput-root': {
+                  borderRadius: 1.5,
+                }
+              }}
+            >
               <InputLabel>Emplacement Destination</InputLabel>
               <Select
                 value={destinationLocation}
                 onChange={(e) => setDestinationLocation(e.target.value)}
                 label="Emplacement Destination"
+                startAdornment={
+                  destinationLocation !== 'all' ? (
+                    <Box 
+                      sx={{ 
+                        width: 8, 
+                        height: 8, 
+                        borderRadius: '50%', 
+                        bgcolor: theme.palette.error.main,
+                        mr: 1.5
+                      }}
+                    />
+                  ) : null
+                }
               >
                 <MenuItem value="all">Tous les emplacements</MenuItem>
                 {locations.map(location => (
@@ -398,76 +835,59 @@ const StockMovementDashboard = () => {
               </Select>
             </FormControl>
           </Grid>
-          <Grid item xs={12} sm={6} md={3}>
-            <TextField
-              fullWidth
-              label="Produit"
-              variant="outlined"
-              value={productFilter}
-              onChange={(e) => setProductFilter(e.target.value)}
-              InputProps={{
-                startAdornment: <SearchIcon size={20} style={{ marginRight: 8 }} />,
-              }}
-            />
-          </Grid>
+          
+          
         </Grid>
+        
+        {/* Afficher les filtres actifs */}
+        {(period !== 'all' || sourceLocation !== 'all' || destinationLocation !== 'all' || productFilter) && (
+          <Box sx={{ mt: 2, display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+            {period !== 'all' && (
+              <Chip 
+                label={`Période: ${
+                  period === 'month' ? 'Dernier mois' : 
+                  period === 'quarter' ? 'Dernier trimestre' : 
+                  'Dernier semestre'
+                }`}
+                size="small"
+                variant="outlined"
+                color="primary"
+                onDelete={() => setPeriod('all')}
+              />
+            )}
+            
+            {sourceLocation !== 'all' && (
+              <Chip 
+                label={`Source: ${sourceLocation}`}
+                size="small"
+                variant="outlined"
+                color="success"
+                onDelete={() => setSourceLocation('all')}
+              />
+            )}
+            
+            {destinationLocation !== 'all' && (
+              <Chip 
+                label={`Destination: ${destinationLocation}`}
+                size="small"
+                variant="outlined"
+                color="error"
+                onDelete={() => setDestinationLocation('all')}
+              />
+            )}
+            
+            {productFilter && (
+              <Chip 
+                label={`Produit: ${productFilter}`}
+                size="small"
+                variant="outlined"
+                color="info"
+                onDelete={() => setProductFilter('')}
+              />
+            )}
+          </Box>
+        )}
       </Paper>
-      
-      {/* Cartes de statistiques */}
-      <Grid container spacing={3} sx={{ mb: 4 }}>
-        <Grid item xs={12} sm={6} md={3}>
-          <Card elevation={3} sx={{ height: '100%', background: 'linear-gradient(45deg, #2196F3 30%, #21CBF3 90%)' }}>
-            <CardContent>
-              <Typography variant="h6" component="div" sx={{ color: 'white', fontWeight: 'bold', display: 'flex', alignItems: 'center', mb: 2 }}>
-                Total des Mouvements
-              </Typography>
-              <Typography variant="h3" component="div" sx={{ color: 'white', fontWeight: 'bold' }}>
-                {totalMovements}
-              </Typography>
-            </CardContent>
-          </Card>
-        </Grid>
-        <Grid item xs={12} spacing={3} sm={6} md={3}>
-          <Card elevation={3} sx={{ height: '100%', background: 'linear-gradient(45deg, #FF9800 30%, #FFB74D 90%)' }}>
-            <CardContent>
-              <Typography variant="h6" component="div" sx={{ color: 'white', fontWeight: 'bold', display: 'flex', alignItems: 'center', mb: 2 }}>
-                <TrendingUp sx={{ marginRight: 1 }} />
-                Quantité Totale
-              </Typography>
-              <Typography variant="h3" component="div" sx={{ color: 'white', fontWeight: 'bold' }}>
-                {totalQuantity}
-              </Typography>
-            </CardContent>
-          </Card>
-        </Grid>
-        <Grid item xs={12} sm={6} md={3}>
-          <Card elevation={3} sx={{ height: '100%', background: 'linear-gradient(45deg, #4CAF50 30%, #81C784 90%)' }}>
-            <CardContent>
-              <Typography variant="h6" component="div" sx={{ color: 'white', fontWeight: 'bold', display: 'flex', alignItems: 'center', mb: 2 }}>
-                <TrendingDown sx={{ marginRight: 1 }} />
-                Produits Concernés
-              </Typography>
-              <Typography variant="h3" component="div" sx={{ color: 'white', fontWeight: 'bold' }}>
-                {uniqueProducts}
-              </Typography>
-            </CardContent>
-          </Card>
-        </Grid>
-        <Grid item xs={12} sm={6} md={3}>
-          <Card elevation={3} sx={{ height: '100%', background: 'linear-gradient(45deg, #9C27B0 30%, #BA68C8 90%)' }}>
-            <CardContent>
-              <Typography variant="h6" component="div" sx={{ color: 'white', fontWeight: 'bold', display: 'flex', alignItems: 'center', mb: 2 }}>
-                <CompareArrowsIcon sx={{ marginRight: 1 }} />
-                Transferts
-              </Typography>
-              <Typography variant="h3" component="div" sx={{ color: 'white', fontWeight: 'bold' }}>
-                {filteredData.filter(item => item.type === "TRANSFERT").length}
-              </Typography>
-            </CardContent>
-          </Card>
-        </Grid>
-      </Grid>
-      
       {/* Onglets pour les différents rapports */}
       <Paper elevation={3} sx={{ mb: 4 }}>
         <Tabs
@@ -477,9 +897,8 @@ const StockMovementDashboard = () => {
           textColor="primary"
           variant="fullWidth"
         >
-          <Tab label="Mouvements par Mois" icon={<CalendarTodayIcon size={20} />} iconPosition="start" />
-          <Tab label="Transferts entre Emplacements" icon={<CompareArrowsIcon size={20} />} iconPosition="start" />
-          {/* <Tab label="Détails des Mouvements" icon={<Inventory size={20} />} iconPosition="start" /> */}
+          <Tab label="Mouvements par Mois" icon={<CalendarTodayIcon />} iconPosition="start" />
+          <Tab label="Transferts entre Emplacements" icon={<CompareArrowsIcon />} iconPosition="start" />
         </Tabs>
         
         {/* Contenu de l'onglet 1: Mouvements par Mois */}
@@ -501,7 +920,7 @@ const StockMovementDashboard = () => {
             
             <Grid container spacing={4}>
               <Grid item xs={12} lg={8}>
-                <Paper elevation={2} sx={{ p: 2, height: '400px', width:'600px'}} ref={chartRef}>
+                <Paper elevation={2} sx={{ p: 2, height: '400px',width:'600px'}} ref={chartRef}>
                   <Typography variant="subtitle1" gutterBottom fontWeight="bold">
                     Évolution des Mouvements par Type
                   </Typography>
@@ -510,9 +929,9 @@ const StockMovementDashboard = () => {
                       <CartesianGrid strokeDasharray="3 3" />
                       <XAxis dataKey="month" />
                       <YAxis />
-                      <Tooltip />
+                      <RechartsTooltip />
                       <Legend />
-                      {/* Afficher uniquement les transferts */}
+                      
                       <Line type="monotone" dataKey="transferts" stroke="#2196f3" strokeWidth={2} />
                     </LineChart>
                   </ResponsiveContainer>
@@ -551,7 +970,8 @@ const StockMovementDashboard = () => {
                     </TableRow>
                   </TableHead>
                   <TableBody>
-                    {locationTransferData.slice((page - 1) * rowsPerPage, page * rowsPerPage) // Pagination logic
+                    {locationTransferData
+                      .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
                       .map((transfer, index) => (
                         <TableRow key={index}>
                           <TableCell>{transfer.source}</TableCell>
@@ -564,12 +984,12 @@ const StockMovementDashboard = () => {
                 </Table>
                 <TablePagination
                   component="div"
-                  count={locationTransferData.length} // Total number of rows
-                  page={page - 1} // Current page (0-based index)
-                  onPageChange={(event, newPage) => setPage(newPage + 1)} // Update page state
-                  rowsPerPage={rowsPerPage} // Rows per page
-                  onRowsPerPageChange={(event) => setRowsPerPage(parseInt(event.target.value, 10))} // Update rows per page
-                  rowsPerPageOptions={[5, 10, 25]} // Options for rows per page
+                  count={locationTransferData.length}
+                  page={page}
+                  onPageChange={handleChangePage}
+                  rowsPerPage={rowsPerPage}
+                  onRowsPerPageChange={handleChangeRowsPerPage}
+                  rowsPerPageOptions={[5, 10, 25]}
                   labelRowsPerPage="Lignes par page"
                 />
               </TableContainer>
@@ -580,61 +1000,9 @@ const StockMovementDashboard = () => {
             )}
           </Box>
         )}
-
-        {/* Contenu de l'onglet 3: Détails des Mouvements */}
-        {tabValue === 2 && (
-          <Box sx={{ p: 3 }}>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-              <Typography variant="h6" component="h3">
-                Détails des Mouvements de Stock
-              </Typography>
-              <Button 
-                variant="contained" 
-                color="primary" 
-                startIcon={<DownloadIcon />}
-                onClick={() => generatePDF('movement-details')}
-              >
-                Exporter ce Rapport
-              </Button>
-            </Box>
-            
-            {filteredData.length > 0 ? (
-              <TableContainer component={Paper}>
-                <Table>
-                  <TableHead>
-                    <TableRow>
-                      <TableCell>Date</TableCell>
-                      <TableCell>Type</TableCell>
-                      <TableCell>Produit</TableCell>
-                      <TableCell>Source</TableCell>
-                      <TableCell>Destination</TableCell>
-                      <TableCell align="right">Quantité</TableCell>
-                    </TableRow>
-                  </TableHead>
-                  <TableBody>
-                    {filteredData.map((movement, index) => (
-                      <TableRow key={index}>
-                        <TableCell>{formatDate(movement.date_mouvement)}</TableCell>
-                        <TableCell>{movement.type}</TableCell>
-                        <TableCell>{movement.stock.produit.nom}</TableCell>
-                        <TableCell>{movement.emplacement_source?.nom || 'N/A'}</TableCell>
-                        <TableCell>{movement.emplacement_destination?.nom || 'N/A'}</TableCell>
-                        <TableCell align="right">{movement.quantite}</TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </TableContainer>
-            ) : (
-              <Box sx={{ p: 4, textAlign: 'center' }}>
-                <Typography variant="body1">Aucun mouvement trouvé pour les filtres sélectionnés.</Typography>
-              </Box>
-            )}
-          </Box>
-        )}
       </Paper>
     </Container>
   );
 };
 
-export default StockMovementDashboard;
+export default RapportMovements;

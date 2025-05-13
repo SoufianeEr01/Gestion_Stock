@@ -392,11 +392,15 @@ const ReportingStock = () => {
                 />
                 <YAxis />
                 <Tooltip 
-                  formatter={(value, name) => [value, name === "quantite_importe" ? "Stock total" : "Stock réservé"]}
+                  formatter={(value, name) => [value, name === "stockDisponible" ? "Stock disponible" : "Stock réservé"]}
                   labelFormatter={(label) => `Produit: ${label}`}
                 />
                 <Legend />
-                <Bar name="Stock total" dataKey="quantite_importe" fill="#1976d2" />
+                <Bar 
+                  name="Stock disponible" 
+                  dataKey={(item) => item.quantite_importe - item.quantite_reserver} 
+                  fill="#1976d2" 
+                />
                 <Bar name="Stock réservé" dataKey="quantite_reserver" fill="#ff9800" />
               </BarChart>
             </ResponsiveContainer>
