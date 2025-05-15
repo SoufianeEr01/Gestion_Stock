@@ -16,7 +16,7 @@ import java.util.stream.Collectors;
 @RestController
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "*")
+@CrossOrigin(origins = "http://localhost:3000", allowCredentials = "true")
 public class AuthController {
 
     private final AuthService authService;
@@ -27,9 +27,9 @@ public class AuthController {
     public ResponseEntity<?> register(@RequestBody UserDto userDto) {
         boolean isRegistered = authService.register(userDto);
         if (isRegistered) {
-            return ResponseEntity.ok(new ResponseMessage("User registered successfully"));
+            return ResponseEntity.ok(new ResponseMessage("Utilisateur enregistré avec succès."));
         } else {
-            return ResponseEntity.badRequest().body(new ResponseMessage("User already exists"));
+            return ResponseEntity.badRequest().body(new ResponseMessage("L'utilisateur existe déjà."));
         }
     }
 
@@ -38,13 +38,13 @@ public class AuthController {
     public ResponseEntity<?> login(@RequestBody LoginDto loginDto) {
         Authentication authentication = authService.authenticate(loginDto);
         if (authentication == null) {
-            return ResponseEntity.status(401).body(new ResponseMessage("Email ou mot de passe incorrect"));
+            return ResponseEntity.status(401).body(new ResponseMessage("Email ou mot de passe incorrect, ou compte désactivé."));
         }
 
         String token = authService.generateToken(authentication);
 
         UserDetails userDetails = (UserDetails) authentication.getPrincipal();
-        String email = userDetails.getUsername(); // ou getEmail() si tu l’as surchargé
+        String email = userDetails.getUsername();
 
         List<String> roles = userDetails.getAuthorities()
                 .stream()
@@ -53,6 +53,27 @@ public class AuthController {
 
         LoginResponse jwtResponse = new LoginResponse(token, email, roles);
         return ResponseEntity.ok(jwtResponse);
+    }
+
+    // ==== Activer / Désactiver un utilisateur ====
+    @PreAuthorize("hasRole('ADMIN')")
+    @PutMapping("/users/{id}/status")
+    public ResponseEntity<?> toggleUserStatus(@PathVariable Long id, @RequestParam boolean enabled) {
+        boolean updated = authService.toggleUserStatus(id, enabled);
+        if (updated) {
+            String message = enabled ? "Utilisateur activé avec succès." : "Utilisateur désactivé avec succès.";
+            return ResponseEntity.ok(new ResponseMessage(message));
+        } else {
+            return ResponseEntity.badRequest().body(new ResponseMessage("Utilisateur introuvable."));
+        }
+    }
+
+    // ==== Récupérer la liste des utilisateurs ====
+    @PreAuthorize("hasRole('ADMIN')")
+    @GetMapping("/users")
+    public ResponseEntity<?> getAllUsers() {
+        List<UserDto> users = authService.getAllUsers();
+        return ResponseEntity.ok(users);
     }
 
     // ==== Classes internes pour les réponses ====

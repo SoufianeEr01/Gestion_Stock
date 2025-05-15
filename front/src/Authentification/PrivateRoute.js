@@ -3,8 +3,12 @@ import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from './AuthContext';
 
 const PrivateRoute = ({ allowedRoles, children }) => {
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
   const location = useLocation();
+
+  if (loading) {
+    return <div>Chargement...</div>; // ou un spinner
+  }
 
   if (!user) {
     return <Navigate to="/Login" state={{ from: location }} replace />;
@@ -16,5 +20,4 @@ const PrivateRoute = ({ allowedRoles, children }) => {
 
   return children;
 };
-
 export default PrivateRoute;

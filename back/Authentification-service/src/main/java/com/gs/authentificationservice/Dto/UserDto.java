@@ -7,6 +7,7 @@ import lombok.Data;
 
 @Data
 public class UserDto {
+    private  long id;
     @NotBlank
     private String username;
     @NotBlank
@@ -15,4 +16,5 @@ public class UserDto {
     private String email;
 
     private TypeRole role;
+    private boolean enabled;
 }

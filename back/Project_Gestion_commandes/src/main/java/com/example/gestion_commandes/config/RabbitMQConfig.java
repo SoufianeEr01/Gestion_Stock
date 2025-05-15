@@ -33,7 +33,7 @@ public class RabbitMQConfig {
     @Bean
     public MessageListenerAdapter messageListenerAdapter(StockAlertConsumer listener,
                                                          Jackson2JsonMessageConverter converter) {
-        MessageListenerAdapter adapter = new MessageListenerAdapter(listener, "handleStockAlert"); // Méthode correcte
+        MessageListenerAdapter adapter = new MessageListenerAdapter(listener, "recevoirAlerte"); // Méthode correcte
         adapter.setMessageConverter(converter); // Important
         return adapter;
     }

@@ -154,27 +154,24 @@ const StockDashboard = () => {
       
       setInventoryByCategory(inventoryByCategory);
       
-      // Historique des mouvements de stock (entrées/sorties par jour)
-      // Organiser les mouvements par date
+      // Historique des transferts de stock uniquement
       const movementsByDate = {};
       mouvementsData.forEach(mvt => {
-        const date = new Date(mvt.date_mouvement).toLocaleDateString();
-        
-        if (!movementsByDate[date]) {
-          movementsByDate[date] = { date, entrees: 0, sorties: 0 };
-        }
-        
-        if (mvt.type === 'ENTREE') {
-          movementsByDate[date].entrees += mvt.quantite;
-        } else if (mvt.type === 'SORTIE' || mvt.type === 'TRANSFERT') {
-          movementsByDate[date].sorties += mvt.quantite;
+        if (mvt.type === 'TRANSFERT') { // Filtrer uniquement les transferts
+          const date = new Date(mvt.date_mouvement).toLocaleDateString();
+          
+          if (!movementsByDate[date]) {
+            movementsByDate[date] = { date, transferts: 0 };
+          }
+          
+          movementsByDate[date].transferts += mvt.quantite;
         }
       });
       
       // Convertir en tableau trié par date (récent → ancien)
       const stockHistory = Object.values(movementsByDate)
         .sort((a, b) => new Date(b.date) - new Date(a.date))
-        .slice(0, 5);  // Limiter aux 5 derniers jours
+        .slice(0, 5);
       
       setStockHistory(stockHistory);
       
@@ -460,7 +457,7 @@ const StockDashboard = () => {
                 iconPosition="start"
               />
               <Tab 
-                label="Mouvements" 
+                label="Transferts" 
                 icon={<BarChart2 size={16} />} 
                 iconPosition="start"
               />
@@ -474,7 +471,7 @@ const StockDashboard = () => {
               <Typography variant="h6" fontWeight="medium">
                 {activeTab === 0 && "Évolution et Prévisions du Stock"}
                 {activeTab === 1 && "Répartition par Catégorie"}
-                {activeTab === 2 && "Mouvements de Stock Récents"}
+                {activeTab === 2 && "Transferts de Stock Récents"}
               </Typography>
               
               <Box display="flex" gap={2} alignItems="center">
@@ -569,10 +566,14 @@ const StockDashboard = () => {
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis dataKey="date" />
                     <YAxis />
-                    <RechartsTooltip />
+                    <RechartsTooltip formatter={(value) => [`${value} unités`, 'Quantité transférée']} />
                     <Legend />
-                    <Bar dataKey="entrees" name="Entrées" fill="#4ade80" radius={[4, 4, 0, 0]} />
-                    <Bar dataKey="sorties" name="Sorties" fill="#8884d8" radius={[4, 4, 0, 0]} />
+                    <Bar 
+                      dataKey="transferts" 
+                      name="Transferts" 
+                      fill="#6366f1" 
+                      radius={[4, 4, 0, 0]} 
+                    />
                   </BarChart>
                 )}
               </ResponsiveContainer>

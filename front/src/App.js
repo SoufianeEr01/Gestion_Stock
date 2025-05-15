@@ -16,8 +16,11 @@ import PagePrincipalStock from './Gestion_Stock/Page/Stock/PagePrincipalStock';
 import PagePrincipaleMovement from './Gestion_Stock/Page/MovementStock/PagePrincipaleMovement';
 import RapportMovements from './Reporting/RapportMovements';
 import RapportStock from './Reporting/RapportStock';
-import Register from './Authentification/Registre';
+import PageRegistre from './Registre/PageRegistre';
 import Login from './Authentification/Login';
+import Unauthorized from './Authentification/Unauthorized';
+
+import Commande from './Commandes/commande'
 
 function App() {
   return (
@@ -25,10 +28,11 @@ function App() {
       <Router>
         <ToastContainer position="top-center" autoClose={3000} />
         <Routes>
+
           <Route path="/" element={<Navigate to="/Login" replace />} />
-          <Route path="/Registre" element={<Register />} />
           <Route path="/Login" element={<Login />} />
 
+          {/* Routes accessibles à ROLE_GESTIONNAIRE et ROLE_ADMIN */}
           <Route
             path="/*"
             element={
@@ -41,19 +45,33 @@ function App() {
                     <Route path="/movement" element={<PagePrincipaleMovement />} />
                     <Route path="/stock" element={<PagePrincipalStock />} />
                     <Route path="/provider" element={<ShowProviders />} />
+                    <Route path="/orders" element={<Commande />} />
                     <Route path="/Reporting" element={<RapportMovements />} />
                     <Route path="/ReportingStock" element={<RapportStock />} />
+                    {/* Ne pas mettre /Registre ici */}
                   </Routes>
                 </VerticalNavbar>
               </PrivateRoute>
             }
           />
 
-          <Route path="/unauthorized" element={<h2>Accès non autorisé</h2>} />
+          {/* Route réservée uniquement à ROLE_ADMIN */}
+          <Route
+            path="/Registre"
+            element={
+              <PrivateRoute allowedRoles={['ROLE_ADMIN']}>
+                <VerticalNavbar>
+                  <PageRegistre />
+                </VerticalNavbar>
+              </PrivateRoute>
+            }
+          />
+
+          <Route path="/unauthorized" element={<Unauthorized />} />
+
         </Routes>
       </Router>
     </AuthProvider>
   );
 }
-
 export default App;

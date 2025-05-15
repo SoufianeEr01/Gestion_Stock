@@ -5,7 +5,7 @@ import com.gs.project_gestion_stock.service.ProduitService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
-
+import jakarta.validation.Valid;
 import java.util.List;
 
 @RestController
@@ -37,8 +37,9 @@ public class ProduitController {
 
     // POST - create a new product
     @PostMapping
-    public Produit createProduit(@RequestBody Produit produit) {
-        return produitService.createProduit(produit);
+    public ResponseEntity<?> createProduit(@RequestBody @Valid Produit produit) {
+        Produit created = produitService.createProduit(produit);
+        return ResponseEntity.ok(created);
     }
 
     // PUT - update an existing product

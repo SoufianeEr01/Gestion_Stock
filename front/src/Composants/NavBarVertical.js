@@ -29,6 +29,7 @@ import CompareArrowsSharpIcon from '@mui/icons-material/CompareArrowsSharp';
 import InventorySharpIcon from '@mui/icons-material/InventorySharp';
 import BarChartIcon from '@mui/icons-material/BarChart';
 import { styled } from '@mui/material/styles';
+import HowToRegIcon from '@mui/icons-material/HowToReg';
 import {
   Dashboard as DashboardIcon,
   Inventory as InventoryIcon,
@@ -128,18 +129,7 @@ const DrawerStyled = styled(Drawer, { shouldForwardProp: (prop) => prop !== 'ope
 );
 
 // Liste simplifiée des éléments de navigation (sans sous-menus)
-const menuItems = [
-  { text: 'Tableau de bord', icon: <DashboardIcon />, path: '/dashboard' },
-  { text: 'Fournisseurs', icon: <SuppliersIcon />, path: '/provider' },
-  { text: 'Produits', icon: <AddShoppingCartSharpIcon />, path: '/product' },
-  { text: 'Emplacement', icon: <LocationOnIcon />, path: '/location' },
-  { text: 'Stock', icon: <StoreIcon />, path: '/stock' },
-  { text: 'Mouvement Stock', icon: <CompareArrowsSharpIcon />, path: '/movement' },
-  { text: 'Commandes', icon: <ShoppingCartIcon />, path: '/orders' },
-  { text: 'Rapports Stock', icon: <BarChartIcon />, path: '/ReportingStock' },
-  { text: 'Rapports Mouvement', icon: <InventorySharpIcon />, path: '/Reporting' },
-  { text: 'Paramètres', icon: <SettingsIcon />, path: '/settings' },
-];
+
 
 const VerticalNavbar = ({ children }) => {
   const theme = useTheme();
@@ -149,13 +139,32 @@ const VerticalNavbar = ({ children }) => {
   const [anchorEl, setAnchorEl] = useState(null);
   const [notificationAnchorEl, setNotificationAnchorEl] = useState(null);
   const [headerTitle, setHeaderTitle] = useState("Système d'Inventaire");
+  const [roleA,setRoleA]=useState("");
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const {role,setRole}=useState;
+  
+  const menuItems = [
+  { text: 'Tableau de bord', icon: <DashboardIcon />, path: '/dashboard' },
+  { text: 'Fournisseurs', icon: <SuppliersIcon />, path: '/provider' },
+  { text: 'Produits', icon: <AddShoppingCartSharpIcon />, path: '/product' },
+  { text: 'Emplacement', icon: <LocationOnIcon />, path: '/location' },
+  { text: 'Stock', icon: <StoreIcon />, path: '/stock' },
+  { text: 'Mouvement Stock', icon: <CompareArrowsSharpIcon />, path: '/movement' },
+  { text: 'Commandes', icon: <ShoppingCartIcon />, path: '/orders' },
+  { text: 'Rapports Stock', icon: <BarChartIcon />, path: '/ReportingStock' },
+  { text: 'Rapports Mouvement', icon: <InventorySharpIcon />, path: '/Reporting' },
+  ...(roleA.includes("ROLE_ADMIN") ? [{ text: 'Registre', icon: <HowToRegIcon />, path: '/Registre' }] : [])
+
+];
 
   // Gérer les changements de taille d'écran
-  useEffect(() => {
-    setOpen(!isMobile);
-  }, [isMobile]);
+useEffect(() => {
+  setOpen(!isMobile);
+  setRoleA(JSON.parse(localStorage.getItem("roles")));
+}, [isMobile]);
+
+
 
   const handleDrawerToggle = () => {
     setOpen(!open);
