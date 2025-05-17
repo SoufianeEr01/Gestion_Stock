@@ -76,7 +76,7 @@ public class StockService {
             stock.setEmplacement(emplacementComplet);
 
             // ✅ Calcul de l'alerte
-            int limiteMinimale = stock.getQuantite_reserver() + stock.getSeuil_reapprovisionnement();
+            int limiteMinimale = stock.getSeuil_reapprovisionnement();
             long joursRestants = ChronoUnit.DAYS.between(LocalDate.now(), stock.getDate_expiration());
 
             boolean seuilProche = stock.getQuantite_importe() <= limiteMinimale;

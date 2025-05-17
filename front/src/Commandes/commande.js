@@ -8,7 +8,7 @@ const Commande = () => {
 
   // Récupérer les données depuis l'API
   useEffect(() => {
-    axios.get('http://localhost:8081/bonachats/en-attente')
+    axios.get('http://localhost:8082/bonachats/en-attente')
       .then(response => {
         setBons(response.data);
       })
@@ -67,7 +67,7 @@ const Commande = () => {
 
   // Fonction pour approuver un bon d'achat
   const approuverBonAchat = (id) => {
-    axios.put(`http://localhost:8081/bonachats/approuver/${id}`)
+    axios.put(`http://localhost:8082/bonachats/approuver/${id}`)
       .then(response => {
         // alert('Bon d\'achat approuvé!');
         // Mettre à jour l'état des bons pour refléter le changement
