@@ -53,9 +53,18 @@ public class MouvementStockService {
         Stock stockSource = stockRepository.findById(dto.getStock().getId())
                 .orElseThrow(() -> new EntityNotFoundException("Stock source introuvable."));
 
+
         int quantite = dto.getQuantite();
+
         if (quantite <= 0) {
-            throw new IllegalArgumentException("La quantité transférée doit être supérieure à 0.");
+            throw new IllegalArgumentException("La quantité transférée doit être supérieure à zéro.");
+        }
+
+// Quantité disponible réellement transférable = quantité importée - quantité réservée
+        int quantiteDisponible = stockSource.getQuantite_importe() - stockSource.getQuantite_reserver();
+
+        if (quantite > quantiteDisponible) {
+            throw new IllegalArgumentException("Quantité transférée dépasse la quantité disponible après réservation.");
         }
 
         if (stockSource.getEmplacement() == null

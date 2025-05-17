@@ -7,7 +7,8 @@ const AddProduct = ({ onProductAdded, onClose, fetchProducts }) => {
     fournisseurId: '',
     produitId: '',
     quantite_commande: '',
-    code_bare: ''
+    code_bare: '',
+    id_fournisseur: '' // Ajout du champ id_fournisseur
   });
 
   const [fournisseurs, setFournisseurs] = useState([]);
@@ -59,6 +60,7 @@ const handleSubmit = async (e) => {
     const newProduct = {
       nom: produitSelectionne.nom,
       description: produitSelectionne.description,
+      id_fournisseur: product.fournisseurId,
       categorie: produitSelectionne.categorie,
       image: produitSelectionne.image,
       code_bare: produitSelectionne.code_bare,
@@ -135,6 +137,17 @@ const handleSubmit = async (e) => {
         fullWidth
         margin="normal"
         required
+      />
+
+      <TextField
+        label="ID Fournisseur"
+        name="id_fournisseur"
+        value={product.fournisseurId}
+        onChange={handleChange}
+        fullWidth
+        margin="normal"
+        required
+        disabled
       />
 
       <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 3 }}>

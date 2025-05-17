@@ -63,6 +63,7 @@ public class StockAlertConsumer {
                 alerte.setFournisseurId(Integer.parseInt(alerteMap.get("fournisseur").toString()));
             }
 
+
                 BonAchat bon = new BonAchat();
                 bon.setProduitId((long) alerte.getProduitId());
                 bon.setNomProduit(alerte.getNomProduit());
@@ -107,7 +108,6 @@ public class StockAlertConsumer {
                 System.out.println("Alerte de bon d'achat : " + bon);
                 bonAchatRepository.save(bon);
                 System.out.println("✅ Bon d'achat généré automatiquement et enregistré : " + bon);
-
 
         } catch (Exception e) {
             System.err.println("❌ Erreur lors du traitement de l’alerte : " + e.getMessage());

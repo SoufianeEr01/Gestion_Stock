@@ -9,5 +9,4 @@ public class ProjectGestionStockApplication {
     public static void main(String[] args) {
         SpringApplication.run(ProjectGestionStockApplication.class, args);
     }
-
 }

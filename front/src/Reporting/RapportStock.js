@@ -383,6 +383,8 @@ const ReportingStock = () => {
               <BarChart 
                 data={group}
                 margin={{ top: 20, right: 30, left: 20, bottom: 70 }}
+                barSize={20}
+                barGap={2}
               >
                 <XAxis 
                   dataKey="produit.nom" 
@@ -392,12 +394,22 @@ const ReportingStock = () => {
                 />
                 <YAxis />
                 <Tooltip 
-                  formatter={(value, name) => [value, name === "quantite_importe" ? "Stock total" : "Stock réservé"]}
+                  formatter={(value, name) => [value, name === "Quantité importée" ? "Quantité importée" : "Quantité réservée"]}
                   labelFormatter={(label) => `Produit: ${label}`}
                 />
-                <Legend />
-                <Bar name="Stock total" dataKey="quantite_importe" fill="#1976d2" />
-                <Bar name="Stock réservé" dataKey="quantite_reserver" fill="#ff9800" />
+                <Legend verticalAlign="top" />
+                <Bar 
+                  name="Quantité importée" 
+                  dataKey="quantite_importe" 
+                  fill="#1976d2" 
+                  minPointSize={3}
+                />
+                <Bar 
+                  name="Quantité réservée" 
+                  dataKey="quantite_reserver" 
+                  fill="#ff9800" 
+                  minPointSize={3}
+                />
               </BarChart>
             </ResponsiveContainer>
           </Box>
