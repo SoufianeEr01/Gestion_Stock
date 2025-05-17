@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { 
+import axios from 'axios';
+import {
   Drawer, 
   List, 
   ListItem, 
@@ -20,6 +21,10 @@ import {
   ListItemButton,
   useMediaQuery,
   ListItemIcon,
+  ListItemAvatar,
+  ListSubheader,
+  Chip,
+  CircularProgress
 } from '@mui/material';
 import LocationOnIcon from '@mui/icons-material/LocationOn';
 import StoreIcon from '@mui/icons-material/Store';
@@ -44,10 +49,12 @@ import {
   Logout as LogoutIcon,
   AccountCircle as AccountCircleIcon,
   Help as HelpIcon,
+  Info as InfoIcon
 } from '@mui/icons-material';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../Authentification/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import ShoppingBasketIcon from '@mui/icons-material/ShoppingBasket';
 
 // Largeur du drawer
 const drawerWidth = 260;
@@ -128,9 +135,6 @@ const DrawerStyled = styled(Drawer, { shouldForwardProp: (prop) => prop !== 'ope
   }),
 );
 
-// Liste simplifiée des éléments de navigation (sans sous-menus)
-
-
 const VerticalNavbar = ({ children }) => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
@@ -139,32 +143,46 @@ const VerticalNavbar = ({ children }) => {
   const [anchorEl, setAnchorEl] = useState(null);
   const [notificationAnchorEl, setNotificationAnchorEl] = useState(null);
   const [headerTitle, setHeaderTitle] = useState("Système d'Inventaire");
-  const [roleA,setRoleA]=useState("");
+  const [roleA, setRoleA] = useState("");
+  const [commandes, setCommandes] = useState([]);
+  const [loadingCommandes, setLoadingCommandes] = useState(false);
   const { user, logout } = useAuth();
   const navigate = useNavigate();
-  const {role,setRole}=useState;
   
-  const menuItems = [
-  { text: 'Tableau de bord', icon: <DashboardIcon />, path: '/dashboard' },
-  { text: 'Fournisseurs', icon: <SuppliersIcon />, path: '/provider' },
-  { text: 'Produits', icon: <AddShoppingCartSharpIcon />, path: '/product' },
-  { text: 'Emplacement', icon: <LocationOnIcon />, path: '/location' },
-  { text: 'Stock', icon: <StoreIcon />, path: '/stock' },
-  { text: 'Mouvement Stock', icon: <CompareArrowsSharpIcon />, path: '/movement' },
-  { text: 'Commandes', icon: <ShoppingCartIcon />, path: '/orders' },
-  { text: 'Rapports Stock', icon: <BarChartIcon />, path: '/ReportingStock' },
-  { text: 'Rapports Mouvement', icon: <InventorySharpIcon />, path: '/Reporting' },
-  ...(roleA.includes("ROLE_ADMIN") ? [{ text: 'Registre', icon: <HowToRegIcon />, path: '/Registre' }] : [])
-
-];
-
   // Gérer les changements de taille d'écran
-useEffect(() => {
-  setOpen(!isMobile);
-  setRoleA(JSON.parse(localStorage.getItem("roles")));
-}, [isMobile]);
+  useEffect(() => {
+    setOpen(!isMobile);
+    setRoleA(JSON.parse(localStorage.getItem("roles")) || "");
+  }, [isMobile]);
 
+  // Fonction pour récupérer les commandes en attente
+  const fetchCommandes = async () => {
+    try {
+      setLoadingCommandes(true);
+      const response = await axios.get('http://localhost:8082/bonachats/en-attente');
+      // Filtrer les commandes pour ne garder que celles avec le statut "En attente"
+      const commandesEnAttente = response.data.filter(commande => commande.statut === "En attente");
+      setCommandes(commandesEnAttente || []);
+    } catch (error) {
+      console.error('Erreur lors de la récupération des commandes en attente:', error);
+    } finally {
+      setLoadingCommandes(false);
+    }
+  };
 
+  // Items du menu
+  const menuItems = [
+    { text: 'Tableau de bord', icon: <DashboardIcon />, path: '/dashboard' },
+    { text: 'Fournisseurs', icon: <SuppliersIcon />, path: '/provider' },
+    { text: 'Produits', icon: <AddShoppingCartSharpIcon />, path: '/product' },
+    { text: 'Emplacement', icon: <LocationOnIcon />, path: '/location' },
+    { text: 'Stock', icon: <StoreIcon />, path: '/stock' },
+    { text: 'Mouvement Stock', icon: <CompareArrowsSharpIcon />, path: '/movement' },
+    { text: 'Commandes', icon: <ShoppingCartIcon />, path: '/orders' },
+    { text: 'Rapports Stock', icon: <BarChartIcon />, path: '/ReportingStock' },
+    { text: 'Rapports Mouvement', icon: <InventorySharpIcon />, path: '/Reporting' },
+    ...(roleA.includes("ROLE_ADMIN") ? [{ text: 'Registre', icon: <HowToRegIcon />, path: '/Registre' }] : [])
+  ];
 
   const handleDrawerToggle = () => {
     setOpen(!open);
@@ -205,6 +223,16 @@ useEffect(() => {
   const isProfileMenuOpen = Boolean(anchorEl);
   const isNotificationMenuOpen = Boolean(notificationAnchorEl);
 
+  // Récupérer les commandes au chargement du composant
+  useEffect(() => {
+    fetchCommandes();
+    
+    // Rafraîchir les commandes périodiquement (toutes les 5 minutes)
+    const intervalId = setInterval(fetchCommandes, 300000);
+    
+    return () => clearInterval(intervalId);
+  }, []);
+
   return (
     <div className="vertical-navbar">
       <Box sx={{ display: 'flex' }}>
@@ -225,10 +253,10 @@ useEffect(() => {
               variant="h6" 
               noWrap 
               component="div" 
-              sx={{ 
+              sx={{  
                 display: { xs: 'none', sm: 'block' }, 
                 fontWeight: 600, 
-                letterSpacing: '0.5px' 
+                letterSpacing: '0.5px'
               }}
             >
               {headerTitle}
@@ -246,7 +274,11 @@ useEffect(() => {
                   color="inherit"
                   onClick={handleNotificationMenuOpen}
                 >
-                  <Badge badgeContent={4} color="error">
+                  <Badge 
+                    badgeContent={commandes.length} 
+                    color="error"
+                    max={99}
+                  >
                     <NotificationsIcon />
                   </Badge>
                 </IconButton>
@@ -258,7 +290,7 @@ useEffect(() => {
                   onClick={handleProfileMenuOpen}
                   sx={{ ml: 1 }}
                 >
-                  <Avatar 
+                  <Avatar
                     sx={{ 
                       width: 32, 
                       height: 32, 
@@ -273,6 +305,7 @@ useEffect(() => {
             </Box>
           </Toolbar>
         </AppBarStyled>
+        
         {/* Menu profil */}
         <Menu
           anchorEl={anchorEl}
@@ -303,12 +336,6 @@ useEffect(() => {
             </ListItemIcon>
             Mon profil
           </MenuItem>
-          <MenuItem onClick={() => { handleMenuClose(); navigate('/settings'); }}>
-            <ListItemIcon>
-              <SettingsIcon fontSize="small" />
-            </ListItemIcon>
-            Paramètres
-          </MenuItem>
           <Divider />
           <MenuItem onClick={handleLogout}>
             <ListItemIcon>
@@ -317,6 +344,7 @@ useEffect(() => {
             Déconnexion
           </MenuItem>
         </Menu>
+        
         {/* Drawer (menu latéral) */}
         <DrawerStyled variant="permanent" open={open}>
           <DrawerHeader>
@@ -334,7 +362,7 @@ useEffect(() => {
                 <Typography 
                   variant="h6" 
                   sx={{ 
-                    ml: 1.5, 
+                    ml: 1.5,
                     fontWeight: 600,
                     fontSize: '1.125rem',
                   }}
@@ -345,7 +373,8 @@ useEffect(() => {
             )}
           </DrawerHeader>
           <Divider />
-          {/* Liste des éléments du menu (simplifiée) */}
+          
+          {/* Liste des éléments du menu */}
           <List sx={{ px: 1, py: 1 }}>
             {menuItems.map((item, index) => (
               <ListItem key={item.text} disablePadding sx={{ display: 'block', mb: 0.5, borderRadius: 1 }}>
@@ -373,18 +402,19 @@ useEffect(() => {
                   </ListItemIcon>
                   <ListItemText 
                     primary={item.text} 
-                    sx={{ 
+                    sx={{
                       opacity: open ? 1 : 0,
                       '& .MuiTypography-root': {
                         fontWeight: selectedIndex === index ? 500 : 400,
                         color: selectedIndex === index ? theme.palette.primary.main : 'inherit',
                       },
-                    }} 
+                    }}
                   />
                 </ListItemButton>
               </ListItem>
             ))}
           </List>
+          
           {/* Infos en bas du menu */}
           {open && (
             <>
@@ -398,12 +428,113 @@ useEffect(() => {
             </>
           )}
         </DrawerStyled>
+        
         {/* Contenu principal */}
         <Box component="main" sx={{ flexGrow: 1, p: 3 }}>
           <DrawerHeader />
           {children}
         </Box>
       </Box>
+      
+      {/* Menu notifications */}
+      <Menu
+        anchorEl={notificationAnchorEl}
+        id="notification-menu"
+        keepMounted
+        open={isNotificationMenuOpen}
+        onClose={handleNotificationMenuClose}
+        PaperProps={{
+          elevation: 3,
+          sx: {
+            minWidth: 320,
+            maxWidth: '90vw',
+            maxHeight: '70vh',
+            overflowY: 'auto'
+          },
+        }}
+        transformOrigin={{ horizontal: 'right', vertical: 'top' }}
+        anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
+      >
+        <ListSubheader sx={{
+          bgcolor: 'primary.main',
+          color: 'white',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          py: 1.5
+        }}>
+          Commandes en attente
+          <Chip 
+            label={commandes.length} 
+            color="error" 
+            size="small"
+            sx={{ color: 'white', fontWeight: 'bold' }}
+          />
+        </ListSubheader>
+        
+        {loadingCommandes ? (
+          <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
+            <CircularProgress size={24} />
+          </Box>
+        ) : commandes.length === 0 ? (
+          <MenuItem disabled sx={{ opacity: 0.7 }}>
+            <ListItemIcon>
+              <InfoIcon fontSize="small" />
+            </ListItemIcon>
+            Aucune commande en attente
+          </MenuItem>
+        ) : (
+          <>
+            {commandes.slice(0, 5).map((commande) => (
+              <MenuItem 
+                key={commande.id}
+                onClick={() => {
+                  handleNotificationMenuClose();
+                  navigate('/orders');
+                }}
+                sx={{
+                  py: 1.5,
+                  borderBottom: '1px solid',
+                  borderColor: 'divider'
+                }}
+              >
+                <ListItemAvatar>
+                  <Avatar sx={{ bgcolor: 'warning.light' }}>
+                    <ShoppingBasketIcon />
+                  </Avatar>
+                </ListItemAvatar>
+                <Box>
+                  <Typography variant="body1" noWrap sx={{ maxWidth: 220 }}>
+                    {commande.nomProduit}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    Qté: {commande.quantite} | {commande.nomFournisseur}
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    {new Date(commande.dateCreation).toLocaleDateString()}
+                  </Typography>
+                </Box>
+              </MenuItem>
+            ))}
+            
+            {commandes.length > 5 && (
+              <MenuItem 
+                onClick={() => {
+                  handleNotificationMenuClose();
+                  navigate('/orders');
+                }}
+                sx={{
+                  justifyContent: 'center',
+                  color: 'primary.main',
+                  fontWeight: 'medium'
+                }}
+              >
+                Voir toutes les {commandes.length} commandes
+              </MenuItem>
+            )}
+          </>
+        )}
+      </Menu>
     </div>
   );
 };
