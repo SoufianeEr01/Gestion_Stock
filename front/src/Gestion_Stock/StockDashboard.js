@@ -522,7 +522,6 @@ const StockDashboard = () => {
                       height={36}
                       payload={[
                         { value: 'Stock Réel', type: 'line', color: '#82ca9d' },
-                        { value: 'Prévision IA', type: 'line', color: '#8884d8' },
                         { value: 'Demande', type: 'line', color: '#ffc658' }
                       ]} 
                     />
